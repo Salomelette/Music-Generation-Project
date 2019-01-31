@@ -21,10 +21,14 @@ def download_mid_file(liste_url):
         os.system("mkdir database")
     if platform.system()=="Windows":
         os.system("md database")
+    namefile=[]
     for url in liste_url:
         urllib.request.urlretrieve(url, './database/{}'.format(url.split('/')[-1]))
-
-
+        namefile.append(url.split('/')[-1])
+    with open('filename.tx','w') as file:
+        for item in namefile:
+            file.write("{}\n".format(item))
+            
 def get_mid_file_url():
     url="http://www.piano-midi.de/midi_files.htm"
     rep=requests.get(url=url)
