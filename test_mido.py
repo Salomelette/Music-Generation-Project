@@ -3,20 +3,24 @@ import urllib.request
 from bs4 import BeautifulSoup
 import requests
 import os
+import platform
 
-mid=mido.MidiFile("MIDI_sample.mid")
+"""mid=mido.MidiFile("MIDI_sample.mid")
 for i, track in enumerate(mid.tracks):
     print('Track {}: {}'.format(i, track.name))
 
     for msg in track:
     	print(msg)
     	if msg.is_meta:
-    		print(msg.type)
+    		print(msg.type)"""
 
 
 
 def download_mid_file(liste_url):
-    os.system("mkdir database")
+    if platform.system()=="Linux":
+        os.system("mkdir database")
+    if platform.system()=="Windows":
+        os.system("md database")
     for url in liste_url:
         urllib.request.urlretrieve(url, './database/{}'.format(url.split('/')[-1]))
 
