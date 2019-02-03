@@ -20,11 +20,13 @@ def extract(database):
     res = []
     midibd = convert_midibd(database)
     for m in midibd:
+        resm = []
         for track in m.tracks:
 #            print('Track {}: {}'.format(i, track.name))
             for msg in track:
                 if not msg.is_meta and msg.type == 'note_on':
-                    res.append(msg.note%12)
+                    resm.append(msg.note%12)
+        res.append(resm)
                     
     return res 
 
