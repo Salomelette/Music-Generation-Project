@@ -43,4 +43,5 @@ def get_mid_file():
     print("downloading...")
     download_mid_file(liste_url)
 
-
+if __name__=='__main__':
+    get_mid_file()
