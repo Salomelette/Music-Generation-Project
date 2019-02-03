@@ -2,7 +2,7 @@
 import mido 
 import os 
 
-database = os.listdir("/home/salom/ProjetM1/database")
+database = os.listdir("./database")
 
 def convert_midibd(database):
     bd = []
@@ -30,8 +30,19 @@ def extract(database):
                     
     return res 
 
+def find_doublet(list_track,nb):
+    count=dict()
+    for i in range(12):
+        for j in range(12):
+            count[(i,j)]=0
+    for track in list_track:
+        for i in range(len(track)-1):
+            count[(track[i],track[i+1])]+=1
+    res=sorted(count.items(), key=lambda x: x[1],reverse=True)
+    return res[:nb]
 
 notes = extract(database)
 print(len(notes))
-        
+res=find_doublet(notes,15)
+print(res)
     
