@@ -1,6 +1,7 @@
-
+import numpy as np
 import mido 
 import os 
+import time
 
 database = os.listdir("./database")
 
@@ -19,12 +20,12 @@ def extract(database):
     res = []
     midibd = convert_midibd(database)
     velocity = dict()
-    time = dict()
+    temps = dict()
     nb_occ = dict()
     
     for i in range(12):
         velocity[i] = 0
-        time[i] = 0
+        temps[i] = 0
         nb_occ[i] = 0
         
         
@@ -36,16 +37,16 @@ def extract(database):
                     note = msg.note%12 
                     resm.append(note)
                     velocity[note] += msg.velocity 
-                    time[note] += msg.time
+                    temps[note] += msg.time
                     nb_occ[note] += 1 
 
         res.append(resm)
     
     for i in range(12):
         velocity[i] /= nb_occ[i]
-        time[i] /= nb_occ[i]
+        temps[i] /= nb_occ[i]
                    
-    return res, velocity, time, nb_occ
+    return res, velocity, temps, nb_occ
 
 def find_doublet(list_track,nb):
     count=dict()
@@ -58,9 +59,53 @@ def find_doublet(list_track,nb):
     res=sorted(count.items(), key=lambda x: x[1],reverse=True)
     return [res[i][0] for i in range(nb)]
 
-notes, vel, time, nb_occ = extract(database)
+
+def learn_markov(list_track):
+    doublets = find_doublet(list_track,20)
+    dim = 12 + len(doublets)
+    pi = np.zeros(dim)
+    A = np.zeros(dim*dim).reshape(dim,dim)
+
+    for track in list_track:
+        is_doublet = False
+        if (track[0], track[1]) in doublets:
+            pi[12+doublets.index((track[0], track[1]))] += 1
+            if (track[2],track[3]) in doublets:
+                A[12+doublets.index((track[0],track[1]))][12+doublets.index((track[2],track[3]))]+=1
+            else:
+                A[12+doublets.index((track[0],track[1]))][track[2]]+=1
+            is_doublet = True
+        else:
+            pi[track[0]]+=1
+        for i in range(len(track)-1):
+            if is_doublet==True:
+                is_doublet=False
+                continue
+            if (track[i], track[i+1]) in doublets:
+                if i+2<len(track) and i+3<len(track) and (track[i+2],track[i+3]) in doublets:
+                    A[12+doublets.index((track[i], track[i+1]))][12+doublets.index((track[i+2],track[i+3]))]+=1
+                else:
+                    if i+2<len(track):
+                        A[12+doublets.index((track[i],track[i+1]))][track[i+2]]+=1
+                    else:
+                        continue
+                is_doublet=True
+            else:
+                if i+2<len(track) and (track[i+1],track[i+2]) in doublets:
+                    A[track[i]][12+doublets.index((track[i+1],track[i+2]))]+=1
+                else:
+                    A[track[i]][track[i+1]]+=1
+    n=np.linalg.norm(pi,ord=1)
+    pi/=n
+    for item in A:
+        n=np.linalg.norm(item,ord=1)
+        item/=n
+    print(A)
+    print(sum(A[0]))
+    print(pi)
+notes, vel, temps, nb_occ = extract(database)
 #print(len(notes), vel, time, nb_occ)
-res=find_doublet(notes,20)
-print(res)
+print(len(notes))
+learn_markov(notes)
 
     
