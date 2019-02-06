@@ -60,7 +60,7 @@ def find_doublet(list_track,nb):
     return [res[i][0] for i in range(nb)]
 
 
-def learn_markov(list_track,vel,temps):
+def learn_markov_model(list_track,vel,temps):
     doublets = find_doublet(list_track,20)
     dim = 12 + len(doublets)
     pi = np.zeros(dim)
@@ -110,12 +110,13 @@ def learn_markov(list_track,vel,temps):
     res['velocity']=vel
     res['temps']=temps
     res['nb_notes']=nb_notes
+    res['doublets']=doublets
     with open('markov_model.json','w') as file:
         json.dump(res,file)
     
 notes, vel, temps, nb_occ = extract(database)
 #print(len(notes), vel, time, nb_occ)
 print(len(notes))
-learn_markov(notes,vel,temps)
+learn_markov_model(notes,vel,temps)
 
     
