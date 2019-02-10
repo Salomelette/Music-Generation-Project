@@ -61,7 +61,7 @@ def find_doublet(list_track,nb):
 
 
 def learn_markov_model(list_track,vel,temps):
-    doublets = find_doublet(list_track,20)
+    doublets = find_doublet(list_track,10)
     dim = 12 + len(doublets)
     pi = np.zeros(dim)
     A = np.zeros(dim*dim).reshape(dim,dim)
@@ -103,7 +103,7 @@ def learn_markov_model(list_track,vel,temps):
     print(A)
     print(sum(A[0]))
     print(pi)
-    nb_notes=np.mean(np.array([len(track) for track in list_track]))
+    nb_notes=int(np.mean(np.array([len(track) for track in list_track])))
     res=dict()
     res['A']=A.tolist()
     res['pi']=pi.tolist()
