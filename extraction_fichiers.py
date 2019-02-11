@@ -24,28 +24,37 @@ def extract(database):
     nb_occ = dict()
     
     for i in range(12):
-        velocity[i] = 0
-        temps[i] = 0
+        velocity[i] = dict()
+        temps[i] = dict()
         nb_occ[i] = 0
         
         
     for m in midibd:
         resm = []
         for track in m.tracks:
+            daux = dict()
             for msg in track:
                 if not msg.is_meta and msg.type == 'note_on':
                     note = msg.note%12 
                     resm.append(note)
-                    velocity[note] += msg.velocity 
-                    temps[note] += msg.time
+                    vel = msg.velocity 
+                    if vel in velocity[note]:
+                        velocity[note][vel] += 1
+                    else:
+                        velocity[note][vel] = 1
+                    ti = msg.time
+                    if ti in temps[note]:
+                        temps[note][ti] += 1
+                    else:
+                        temps[note][ti] = 1
                     nb_occ[note] += 1 
 
         res.append(resm)
     
-    for i in range(12):
+    """for i in range(12):
         velocity[i] /= nb_occ[i]
         temps[i] /= nb_occ[i]
-                   
+    """                  
     return res, velocity, temps, nb_occ
 
 def find_doublet(list_track,nb):
