@@ -51,10 +51,13 @@ def extract(database):
 
         res.append(resm)
     
-    """for i in range(12):
-        velocity[i] /= nb_occ[i]
-        temps[i] /= nb_occ[i]
-    """                  
+    for i in range(12):
+        for keys in velocity[i]:
+
+            velocity[i][keys] /= nb_occ[i]
+        for keys in temps[i]:
+            temps[i][keys] /= nb_occ[i]
+
     return res, velocity, temps, nb_occ
 
 def find_doublet(list_track,nb):
