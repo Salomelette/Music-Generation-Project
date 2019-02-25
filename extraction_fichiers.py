@@ -3,7 +3,9 @@ import mido
 import os 
 import time
 import json
+import pickle as pkl
 from collections import Counter
+
 database = os.listdir("./database")
 
 
@@ -37,8 +39,8 @@ def extract(database):
         for track in m.tracks:
             for msg in track:
                 if not msg.is_meta and msg.type == 'note_on':
-                    if msg.time != 0:
-                        note = msg.note, msg.time
+                    if msg.time != 0 and msg.velocity!=0:
+                        note = msg.note,msg.time #round(msg.time,-1)
                         resm.append(note)
                         total.append(note)
                         vel = msg.velocity
@@ -63,7 +65,7 @@ def extract(database):
 
     return res, velocity, nb_occ
 
-def find_doublet(list_track,nb):
+def find_doublet(list_track,nb): #bigramme
     count=dict()
     for i in range(12):
         for j in range(12):
@@ -78,10 +80,12 @@ def find_doublet(list_track,nb):
 def learn_markov_model(list_track,vel):
     # doublets = find_doublet(list_track,10)
     dim = len(vel)
-    pi = np.zeros(dim)
-    A = np.zeros(dim*dim).reshape(dim,dim)
+    pi = np.ones(dim)
+    print(dim)
+    A = np.ones(dim*dim).reshape(dim,dim)
     index = dict()
     notes = list(vel.keys())
+    print(dim==len(notes))
 
     for i in range(len(notes)):
         index[notes[i]] = i 
@@ -96,6 +100,9 @@ def learn_markov_model(list_track,vel):
         #         A[12+doublets.index((track[0],track[1]))][track[2]]+=1
         #     is_doublet = True
         # else:
+        if len(track)==0:
+            print('allo')
+            continue
         pi[index[track[0]]]+=1
         for i in range(len(track)-1):
         #     # if is_doublet==True:
@@ -119,24 +126,30 @@ def learn_markov_model(list_track,vel):
     pi/=n
     for item in A:
         n=np.linalg.norm(item,ord=1)
+        #print( n)
         item/=n
+    print(sum(A[-1]))
     print(A)
     print(sum(A[0]))
     print(pi)
-    nb_notes=int(np.mean(np.array([len(track) for track in list_track])))
+    nb_notes=int(np.mean(np.array([len(track) for track in list_track if len(track)!=0])))
     res=dict()
-    res['A']=A.tolist()
-    res['pi']=pi.tolist()
+    res['A']=A
+    res['pi']=pi
     res['velocity']=vel
     # res['temps']=temps
     res['nb_notes']=nb_notes
+    res['index']=index
     # res['doublets']=doublets
-    with open('markov_model.json','w') as file:
-        json.dump(res,file)
+    with open('markov_model.p','wb') as file:
+        pkl.dump(res,file)
+    #with open('markov_model.json','w') as file:
+    #    json.dump(res,file)
     
 notes, vel, nb_occ = extract(database)
 #print(len(notes), vel, time, nb_occ)
-print(len(notes))
+#print(vel[list(vel.keys())[0]].keys())
+print(len(vel))
 learn_markov_model(notes,vel)
 
     
