@@ -22,6 +22,7 @@ def extract(database):
     res = []
     midibd = convert_midibd(database)
     velocity = dict()
+    total = []
     # temps = dict()
     # nb_occ = dict()
     
@@ -34,17 +35,16 @@ def extract(database):
     for m in midibd:
         resm = []
         for track in m.tracks:
-            daux = dict()
             for msg in track:
                 if not msg.is_meta and msg.type == 'note_on':
                     if msg.time != 0:
                         note = msg.note, msg.time
-                    resm.append(note)
-                    total.append(note)
-                    vel = msg.velocity
-                    if note not in velocity.keys():
-                        velocity[note]=Counter()
-                    velocity[note][vel] += 1
+                        resm.append(note)
+                        total.append(note)
+                        vel = msg.velocity
+                        if note not in velocity.keys():
+                            velocity[note]=Counter()
+                        velocity[note][vel] += 1
                     # ti = msg.time
                     # if ti in temps[note]:
                     #     temps[note][ti] += 1
@@ -75,41 +75,46 @@ def find_doublet(list_track,nb):
     return [res[i][0] for i in range(nb)]
 
 
-def learn_markov_model(list_track,vel,temps):
-    doublets = find_doublet(list_track,10)
-    dim = 12 + len(doublets)
+def learn_markov_model(list_track,vel):
+    # doublets = find_doublet(list_track,10)
+    dim = len(vel)
     pi = np.zeros(dim)
     A = np.zeros(dim*dim).reshape(dim,dim)
+    index = dict()
+    notes = list(vel.keys())
+
+    for i in range(len(notes)):
+        index[notes[i]] = i 
 
     for track in list_track:
-        is_doublet = False
-        if (track[0], track[1]) in doublets:
-            pi[12+doublets.index((track[0], track[1]))] += 1
-            if (track[2],track[3]) in doublets:
-                A[12+doublets.index((track[0],track[1]))][12+doublets.index((track[2],track[3]))]+=1
-            else:
-                A[12+doublets.index((track[0],track[1]))][track[2]]+=1
-            is_doublet = True
-        else:
-            pi[track[0]]+=1
+        # is_doublet = False
+        # if (track[0], track[1]) in doublets:
+        #     pi[12+doublets.index((track[0], track[1]))] += 1
+        #     if (track[2],track[3]) in doublets:
+        #         A[12+doublets.index((track[0],track[1]))][12+doublets.index((track[2],track[3]))]+=1
+        #     else:
+        #         A[12+doublets.index((track[0],track[1]))][track[2]]+=1
+        #     is_doublet = True
+        # else:
+        pi[index[track[0]]]+=1
         for i in range(len(track)-1):
-            if is_doublet==True:
-                is_doublet=False
-                continue
-            if (track[i], track[i+1]) in doublets:
-                if i+2<len(track) and i+3<len(track) and (track[i+2],track[i+3]) in doublets:
-                    A[12+doublets.index((track[i], track[i+1]))][12+doublets.index((track[i+2],track[i+3]))]+=1
-                else:
-                    if i+2<len(track):
-                        A[12+doublets.index((track[i],track[i+1]))][track[i+2]]+=1
-                    else:
-                        continue
-                is_doublet=True
-            else:
-                if i+2<len(track) and (track[i+1],track[i+2]) in doublets:
-                    A[track[i]][12+doublets.index((track[i+1],track[i+2]))]+=1
-                else:
-                    A[track[i]][track[i+1]]+=1
+        #     # if is_doublet==True:
+        #     #     is_doublet=False
+        #         # continue
+        #     if (track[i], track[i+1]) in doublets:
+        #         if i+2<len(track) and i+3<len(track) and (track[i+2],track[i+3]) in doublets:
+        #             A[12+doublets.index((track[i], track[i+1]))][12+doublets.index((track[i+2],track[i+3]))]+=1
+        #         else:
+        #             if i+2<len(track):
+        #                 A[12+doublets.index((track[i],track[i+1]))][track[i+2]]+=1
+        #             else:
+        #                 continue
+        #         is_doublet=True
+        #     else:
+        #         if i+2<len(track) and (track[i+1],track[i+2]) in doublets:
+        #             A[track[i]][12+doublets.index((track[i+1],track[i+2]))]+=1
+        #         else:
+            A[index[track[i]]][index[track[i+1]]]+=1
     n=np.linalg.norm(pi,ord=1)
     pi/=n
     for item in A:
@@ -123,15 +128,15 @@ def learn_markov_model(list_track,vel,temps):
     res['A']=A.tolist()
     res['pi']=pi.tolist()
     res['velocity']=vel
-    res['temps']=temps
+    # res['temps']=temps
     res['nb_notes']=nb_notes
-    res['doublets']=doublets
+    # res['doublets']=doublets
     with open('markov_model.json','w') as file:
         json.dump(res,file)
     
-notes, vel, temps, nb_occ = extract(database)
+notes, vel, nb_occ = extract(database)
 #print(len(notes), vel, time, nb_occ)
 print(len(notes))
-learn_markov_model(notes,vel,temps)
+learn_markov_model(notes,vel)
 
     
