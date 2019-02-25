@@ -3,7 +3,9 @@ import mido
 import os 
 import time
 import json
+from collections import Counter
 database = os.listdir("./database")
+
 
 def convert_midibd(database):
     bd = []
@@ -20,13 +22,13 @@ def extract(database):
     res = []
     midibd = convert_midibd(database)
     velocity = dict()
-    temps = dict()
-    nb_occ = dict()
+    # temps = dict()
+    # nb_occ = dict()
     
-    for i in range(12):
-        velocity[i] = dict()
-        temps[i] = dict()
-        nb_occ[i] = 0
+    # for i in range(12):
+    #     velocity[i] = dict()
+    #     temps[i] = dict()
+    #     nb_occ[i] = 0
         
         
     for m in midibd:
@@ -35,30 +37,31 @@ def extract(database):
             daux = dict()
             for msg in track:
                 if not msg.is_meta and msg.type == 'note_on':
-                    note = msg.note%12 
+                    if msg.time != 0:
+                        note = msg.note, msg.time
                     resm.append(note)
-                    vel = msg.velocity 
-                    if vel in velocity[note]:
-                        velocity[note][vel] += 1
-                    else:
-                        velocity[note][vel] = 1
-                    ti = msg.time
-                    if ti in temps[note]:
-                        temps[note][ti] += 1
-                    else:
-                        temps[note][ti] = 1
-                    nb_occ[note] += 1 
+                    total.append(note)
+                    vel = msg.velocity
+                    if note not in velocity.keys():
+                        velocity[note]=Counter()
+                    velocity[note][vel] += 1
+                    # ti = msg.time
+                    # if ti in temps[note]:
+                    #     temps[note][ti] += 1
+                    # else:
+                    #     temps[note][ti] = 1
+                    # nb_occ[note] += 1 
 
         res.append(resm)
     
-    for i in range(12):
-        for keys in velocity[i]:
+    nb_occ = Counter(total)
+    # for i in range(12):
+    #     for keys in velocity[i]:
+    #         velocity[i][keys] /= nb_occ[i]
+    #     for keys in temps[i]:
+    #         temps[i][keys] /= nb_occ[i]
 
-            velocity[i][keys] /= nb_occ[i]
-        for keys in temps[i]:
-            temps[i][keys] /= nb_occ[i]
-
-    return res, velocity, temps, nb_occ
+    return res, velocity, nb_occ
 
 def find_doublet(list_track,nb):
     count=dict()
