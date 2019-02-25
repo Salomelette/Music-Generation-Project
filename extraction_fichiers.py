@@ -55,9 +55,9 @@ def extract(database):
         res.append(resm)
     
     nb_occ = Counter(total)
-    # for i in range(12):
-    #     for keys in velocity[i]:
-    #         velocity[i][keys] /= nb_occ[i]
+    for i in nb_occ:
+        for keys in velocity[i]:
+            velocity[i][keys] /= nb_occ[i]
     #     for keys in temps[i]:
     #         temps[i][keys] /= nb_occ[i]
 
