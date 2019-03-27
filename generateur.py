@@ -22,17 +22,14 @@ def generate_music(filename):
     pi=data['pi']
     vel=data['velocity']
     nb_notes=data['nb_notes']
-    #nb_notes=20
     index=data['index']
     index_inv=dict()
     for key in index.keys():
         index_inv[index[key]]=key
     dim=len(A)
     res=[np.random.choice(dim, 1, p=pi)[0]]
-    print(res)
     for j in range(nb_notes-1):
         res.append(np.random.choice(dim, 1, p=A[res[-1]])[0])
-    print(res)
     res2=[]
     for i in range(len(res)):
         velo_keys=list(vel[index_inv[res[i]]].keys())
@@ -40,7 +37,6 @@ def generate_music(filename):
         tirage=np.random.choice(len(velo_keys), 1, p=velo_values)[0]
 
         res2.append((index_inv[res[i]][0],index_inv[res[i]][1],velo_keys[tirage]))
-    print(res2)
     create_midi_file(res2,filename)
 
 
@@ -64,7 +60,6 @@ def generate_music_order(filename):
     vel=data['velocity']
     nb_notes=data['nb_notes']
     table_replacement=data['table_replacement']
-    #nb_notes=20
     index=data['index']
     index_inv=dict()
     for key in index.keys():
@@ -75,7 +70,7 @@ def generate_music_order(filename):
     for j in range(nb_notes-1):
         res.append(np.random.choice(dim, 1, p=A[res[-1]])[0])
     res2=[]
-    print(len(res))
+    taille_decode=[]
     for i in range(len(res)):
         val=index_inv[res[i]]
         if type(val) is str:
@@ -83,58 +78,17 @@ def generate_music_order(filename):
             
         else:
             decode=[index_inv[res[i]]]
-        print(len(decode))
+        taille_decode.append(len(decode))
         for item in decode:
             velo_keys=list(vel[item].keys())
             velo_values=list(vel[item].values())
             tirage=np.random.choice(len(velo_keys), 1, p=velo_values)[0]
 
             res2.append((item[0],item[1],velo_keys[tirage]))
-
+    with open("taille_decode.txt",'w') as file:
+        file.write(str(taille_decode))
     create_midi_file(res2,filename)
-# def generate_music_old():
-#     with open('markov_model.json','r') as file:
-#         data=file.read()
-#     data=json.loads(data)
-#     A=data['A']
-#     pi=data['pi']
-#     vel=data['velocity']
-#     temps=data['temps']
     
-#     #nb_notes=10
-#     doublets=data['doublets']
-#     set_notes=list(range(12))+doublets
-#     is_doublet=False
-#     cs=np.cumsum(pi)
-#     a=np.random.rand(1)
-#     i=0
-#     while cs[i]<a:
-#         i+=1
-#     old_val=i
-#     res=[old_val]
-#     if old_val>=12:
-#         is_doublet=True
-#     for j in range(nb_notes-1):
-#         if is_doublet:
-#             is_doublet=False
-#             continue
-#         cs=np.cumsum(A[old_val])
-#         a=np.random.rand(1)
-#         i=0
-#         while cs[i]<a:
-#             i+=1
-#         old_val=i
-#         if old_val>=12:
-#             is_doublet=True
-#         res.append(old_val)
-#     with_doublet=[]
-#     for item in res:
-#         if item<12:
-#             with_doublet.append(item)
-#         else:
-#             with_doublet.append(set_notes[item][0])
-#             with_doublet.append(set_notes[item][1])
-#     create_midi_file(with_doublet,vel,temps)
 
 
 # for i in range(10):
