@@ -20,6 +20,14 @@ def convert_midibd(database):
 
 
 def extract(database):
+    try :
+        with open('database.p','rb') as file:
+            data=pkl.load(file)
+            print("fichier trouvé")
+            return data[0],data[1],data[2]
+    except Exception as e:
+        print(e)
+        print("lecture des fichiers")
     res = []
     midibd = convert_midibd(database)
     velocity = dict()
@@ -41,12 +49,16 @@ def extract(database):
                         if note not in velocity.keys():
                             velocity[note]=Counter()
                         velocity[note][vel] += 1
+
         res.append(resm)
 
     nb_occ = Counter(total)
     for i in nb_occ:
         for keys in velocity[i]:
             velocity[i][keys] /= nb_occ[i]
+
+    with open('database.p','wb') as file:
+        pkl.dump([res,velocity,nb_occ],file)
     return res, velocity, nb_occ
 
 def find_bigram(list_track,nb):
