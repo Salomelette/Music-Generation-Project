@@ -5,10 +5,14 @@ import time
 import json
 import pickle as pkl
 from collections import Counter
+from download_midi_file import get_mid_file
 
-database = os.listdir("./database")
-
-
+try:
+    database = os.listdir("./database")
+except FileNotFoundError as e:
+    print("Téléchargement de la base de donnée")
+    get_mid_file()
+    
 def convert_midibd(database):
     bd = []
     for m in database:
