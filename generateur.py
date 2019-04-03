@@ -90,7 +90,7 @@ def generate_music_order(filename):
     create_midi_file(res2,filename)
     
 
-
-# for i in range(10):
-#     generate_music("test_{}.mid".format(i))
-generate_music_order('first_test.mid')
+if __name__=="__main__":
+    # for i in range(10):
+    #     generate_music("test_{}.mid".format(i))
+    generate_music_order('first_test.mid')

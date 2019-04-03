@@ -16,8 +16,9 @@ url_error='https://discordapp.com/api/webhooks/495517689545097246/B-_MUSOcJkAozN
 
 database = os.listdir("./database")
 notes, vel, nb_occ = extract(database)
-
-cuda0 = torch.device('cuda')
+dd='cuda'
+dd='cpu'
+cuda0 = torch.device('cpu')
 
 def prepare_sequence(seq, to_int):
     idxs = [to_int[w] for w in seq]
@@ -39,66 +40,71 @@ class Rnn(nn.Module):
         tag_scores = F.log_softmax(tag_space, dim=1)
         return tag_scores
     
-
-model=Rnn(128,128,len(nb_occ))
-model.cuda()
-loss_function = nn.CrossEntropyLoss().cuda()
-
-optimizer = optim.SGD(model.parameters(), lr=0.1)
-
-
-
-notes_to_int=dict()
-for item in nb_occ.keys():
-    if item not in notes_to_int.keys():
-        notes_to_int[item]=len(notes_to_int)
-
-sequence_length = 10
-network_input = []
-network_output = []
-for track in notes:
-    for i in range(0, len((track)) - sequence_length, 1):
-        sequence_in = track[i:i + sequence_length]
-        sequence_out = track[i+1:i + sequence_length+1]
-        network_input.append(sequence_in)
-        network_output.append(sequence_out)
-
-#with torch.no_grad():
-#    inputs = prepare_sequence(notes[0], notes_to_int)
-#    tag_scores = model(inputs)
-#    #∟print(tag_scores)
-   
-training_data=[(network_input[i],network_output[i]) for i in range(len(network_input))]
-print("allo")
-msg = Webhook(url_error,msg="Start")
-msg.post()
-for epoch in range(100):  # again, normally you would NOT do 300 epochs, it is toy data
-    for sentence, tags in training_data[:]:
-        # Step 1. Remember that Pytorch accumulates gradients.
-        # We need to clear them out before each instance
-        model.zero_grad()
-
-        # Step 2. Get our inputs ready for the network, that is, turn them into
-        # Tensors of word indices.
-        sentence_in = prepare_sequence(sentence,  notes_to_int)
-        targets = prepare_sequence(tags, notes_to_int)
-
-        # Step 3. Run our forward pass.
-        tag_scores = model(sentence_in)
-        #print(tag_scores)
-        # Step 4. Compute the loss, gradients, and update the parameters by
-        #  calling optimizer.step()
-        #print(targets.shape)
-        loss = loss_function(tag_scores, targets)
-        loss.backward()
-        optimizer.step()
-    print("epoch {}".format(epoch))
-    msg = Webhook(url_error,msg="epoch {}".format(epoch))
+if __name__=="__main__":
+    model=Rnn(128,128,len(nb_occ))
+    if dd=='cuda':
+        model.cuda()
+        loss_function = nn.CrossEntropyLoss().cuda()
+    else:
+        loss_function = nn.CrossEntropyLoss()
+    
+    optimizer = optim.SGD(model.parameters(), lr=0.1)
+    
+    
+    
+    notes_to_int=dict()
+    for item in nb_occ.keys():
+        if item not in notes_to_int.keys():
+            notes_to_int[item]=len(notes_to_int)
+    
+    sequence_length = 10
+    network_input = []
+    network_output = []
+    for track in notes:
+        for i in range(0, len((track)) - sequence_length, 1):
+            sequence_in = track[i:i + sequence_length]
+            sequence_out = track[i+1:i + sequence_length+1]
+            network_input.append(sequence_in)
+            network_output.append(sequence_out)
+    
+    #with torch.no_grad():
+    #    inputs = prepare_sequence(notes[0], notes_to_int)
+    #    tag_scores = model(inputs)
+    #    #∟print(tag_scores)
+       
+    training_data=[(network_input[i],network_output[i]) for i in range(len(network_input))]
+    print("allo")
+    msg = Webhook(url_error,msg="Start")
     msg.post()
+    for epoch in range(1):  # again, normally you would NOT do 300 epochs, it is toy data
+        for sentence, tags in training_data[:10]:
+            # Step 1. Remember that Pytorch accumulates gradients.
+            # We need to clear them out before each instance
+            model.zero_grad()
+    
+            # Step 2. Get our inputs ready for the network, that is, turn them into
+            # Tensors of word indices.
+            sentence_in = prepare_sequence(sentence,  notes_to_int)
+            targets = prepare_sequence(tags, notes_to_int)
+    
+            # Step 3. Run our forward pass.
+            tag_scores = model(sentence_in)
+            #print(tag_scores)
+            # Step 4. Compute the loss, gradients, and update the parameters by
+            #  calling optimizer.step()
+            #print(targets.shape)
+            loss = loss_function(tag_scores, targets)
+            loss.backward()
+            optimizer.step()
+        print("epoch {}".format(epoch))
+        msg = Webhook(url_error,msg="epoch {}".format(epoch))
+        msg.post()
+    
+    torch.save(model.state_dict(),"lstm_model.model")
+       
+    with torch.no_grad():
+        inputs = prepare_sequence(training_data[0][0], notes_to_int)
+        tag_scores = model(inputs)
+        print(tag_scores)
+    
 
-torch.save(model.state_dict(),"lstm_model.model")
-   
-with torch.no_grad():
-    inputs = prepare_sequence(training_data[0][0], notes_to_int)
-    tag_scores = model(inputs)
-    print(tag_scores)
