@@ -17,27 +17,30 @@ url_error='https://discordapp.com/api/webhooks/495517689545097246/B-_MUSOcJkAozN
 database = os.listdir("./database")
 notes, vel, nb_occ = extract(database)
 dd='cuda'
-dd='cpu'
-cuda0 = torch.device('cpu')
+#dd='cpu'
+cuda0 = torch.device(dd)
 
 def prepare_sequence(seq, to_int):
     idxs = [to_int[w] for w in seq]
     return torch.tensor(idxs, dtype=torch.long,device=cuda0)
 
 class Rnn(nn.Module):
-    def __init__(self,embedding_dim,hidden_dim,vocab_size):
+    def __init__(self,embedding_dim,hidden_dim,vocab_size,n_layer=2):
         super(Rnn, self).__init__()
         self.hidden_dim = hidden_dim
-        
+        self.n_layer=n_layer
         self.word_embeddings = nn.Embedding(vocab_size, embedding_dim)
-        self.lstm = nn.LSTM(embedding_dim, hidden_dim)
+        self.lstm = nn.LSTM(embedding_dim, hidden_dim,num_layers=self.n_layer).cuda()
         
-        self.hidden2tag = nn.Linear(hidden_dim, vocab_size)
-    def forward(self, sequence):
+        self.hidden2tag = nn.Linear(hidden_dim, vocab_size).cuda()
+        
+    def forward(self, sequence,hidden=None):
         embeds = self.word_embeddings(sequence)
-        lstm_out, _ = self.lstm(embeds.view(len(sequence), 1, -1))
+        #print(embeds.view(len(sequence), 1, -1))
+        lstm_out, hidden = self.lstm(embeds.view(len(sequence), 1, -1))
         tag_space = self.hidden2tag(lstm_out.view(len(sequence), -1))
-        tag_scores = F.log_softmax(tag_space, dim=1)
+        tag_scores = F.log_softmax(tag_space, dim=1).cuda()
+        
         return tag_scores
     
 if __name__=="__main__":
@@ -48,7 +51,7 @@ if __name__=="__main__":
     else:
         loss_function = nn.CrossEntropyLoss()
     
-    optimizer = optim.SGD(model.parameters(), lr=0.1)
+    optimizer = optim.SGD(model.parameters(), lr=0.001)
     
     
     
@@ -73,11 +76,14 @@ if __name__=="__main__":
     #    #∟print(tag_scores)
        
     training_data=[(network_input[i],network_output[i]) for i in range(len(network_input))]
+    test_data=training_data[int(len(training_data)*0.75):]
+    training_data=training_data[:int(len(training_data)*0.75)]
     print("allo")
+    print(len(training_data))
     msg = Webhook(url_error,msg="Start")
     msg.post()
-    for epoch in range(1):  # again, normally you would NOT do 300 epochs, it is toy data
-        for sentence, tags in training_data[:10]:
+    for epoch in range(10):  # again, normally you would NOT do 300 epochs, it is toy data
+        for sentence, tags in training_data[:]:
             # Step 1. Remember that Pytorch accumulates gradients.
             # We need to clear them out before each instance
             model.zero_grad()
@@ -102,9 +108,5 @@ if __name__=="__main__":
     
     torch.save(model.state_dict(),"lstm_model.model")
        
-    with torch.no_grad():
-        inputs = prepare_sequence(training_data[0][0], notes_to_int)
-        tag_scores = model(inputs)
-        print(tag_scores)
-    
+
 

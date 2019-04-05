@@ -19,8 +19,8 @@ url_error='https://discordapp.com/api/webhooks/495517689545097246/B-_MUSOcJkAozN
 database = os.listdir("./database")
 notes, vel, nb_occ = extract(database)
 dd='cuda'
-dd='cpu'
-cuda0 = torch.device('cpu')
+#dd='cpu'
+cuda0 = torch.device(dd)
 
 def prepare_sequence(seq, to_int):
     idxs = [to_int[w] for w in seq]
@@ -60,15 +60,14 @@ for track in notes:
 
 
 training_data=[(network_input[i],network_output[i]) for i in range(len(network_input))]
-print("allo")
-msg = Webhook(url_error,msg="Start")
-msg.post()
+
 
 res_int=[]
 inputs = prepare_sequence(training_data[0][0], notes_to_int)
 res_int+=inputs.tolist()
 with torch.no_grad():
-    for i in range(100):
+    
+    for i in range(300):
         
         tag_scores = model(inputs)
         indice=tag_scores[-1].argmax()
@@ -77,18 +76,18 @@ with torch.no_grad():
         inputs=torch.tensor(res_int[len(res_int)-10:], dtype=torch.long,device=cuda0)
         
         #print(tag_scores)
-        print(res_int)
+        #print(res_int)
 
 res=[int_to_notes[int(i)] for i in res_int]
 
 index_inv=int_to_notes
 res2=[]
 for i in range(len(res)):
-    print(i)
+    #↨print(i)
     velo_keys=list(vel[res[i]].keys())
     velo_values=list(vel[res[i]].values())
     tirage=np.random.choice(len(velo_keys), 1, p=velo_values)[0]
 
     res2.append((res[i][0],res[i][1],velo_keys[tirage]))
-filename="allo.mid"
+filename="allo3.mid"
 create_midi_file(res2,filename)
