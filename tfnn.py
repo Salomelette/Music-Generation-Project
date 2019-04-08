@@ -1,3 +1,4 @@
+#https://www.tensorflow.org/tutorials/sequences/text_generation
 from extraction_fichiers import extract
 import tensorflow as tf
 tf.enable_eager_execution()
