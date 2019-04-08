@@ -1,6 +1,6 @@
 from extraction_fichiers import extract
 import tensorflow as tf
-#tf.enable_eager_execution()
+tf.enable_eager_execution()
 import numpy as np
 import os
 import time
