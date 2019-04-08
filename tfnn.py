@@ -5,7 +5,7 @@ tf.enable_eager_execution()
 import numpy as np
 import os
 import time
-from discord_hooks import Webhook
+#from discord_hooks import Webhook
 from generateur import create_midi_file
 
 url_web_hook='https://discordapp.com/api/webhooks/485826787574677564/jvaxi81nGdyoIxKng3LzqF9Fqh66tSPpolQ5vWSmVw7nYmfHAYiVfpaptmvZWveyitvG'
@@ -25,9 +25,11 @@ notes_as_int = [np.array([notes2int[c] for c in track]) for track in notes]
 
 list_dataset=[]
 dataset_Final=tf.data.Dataset.from_tensor_slices(notes_as_int[0])
+
 for track in notes_as_int[1:]:
-    notes_dataset = tf.data.Dataset.from_tensor_slices(track)
-    dataset_Final=dataset_Final.concatenate(notes_dataset)
+    if len(track)!=0:
+        notes_dataset = tf.data.Dataset.from_tensor_slices(track)
+        dataset_Final=dataset_Final.concatenate(notes_dataset)
     
 dataset=dataset_Final
 
@@ -174,5 +176,5 @@ for i in range(len(res)):
     tirage=np.random.choice(len(velo_keys), 1, p=velo_values)[0]
 
     res2.append((res[i][0],res[i][1],velo_keys[tirage]))
-filename="allo3.mid"
+filename="allo4.mid"
 create_midi_file(res2,filename)
