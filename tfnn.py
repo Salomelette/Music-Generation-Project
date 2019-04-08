@@ -6,6 +6,7 @@ import numpy as np
 import os
 import time
 #from discord_hooks import Webhook
+from sklearn.model_selection import GridSearchCV
 from generateur import create_midi_file
 
 url_web_hook='https://discordapp.com/api/webhooks/485826787574677564/jvaxi81nGdyoIxKng3LzqF9Fqh66tSPpolQ5vWSmVw7nYmfHAYiVfpaptmvZWveyitvG'
@@ -33,15 +34,10 @@ for track in notes_as_int[1:]:
     
 dataset=dataset_Final
 
-#for i in dataset.take(1):
-#  print(int2notes[i.numpy()])
-  
+ 
 sequences = dataset.batch(sequence_length+1, drop_remainder=True)
 
-#for item in sequences.take(5):
-#    print(item)
-#    #print(repr(''.join(i[item.numpy()])))
-    
+
 def split_input_target(chunk):
     input_text = chunk[:-1]
     target_text = chunk[1:]
@@ -49,21 +45,30 @@ def split_input_target(chunk):
 
 dataset = sequences.map(split_input_target)
 
-#for input_example, target_example in  dataset.take(1):
-#  print ('Input data: ', input_example)
-#  print ('Target data:', target_example)
-  
-  
-#for i, (input_idx, target_idx) in enumerate(zip(input_example[:5], target_example[:5])):
-#    print("Step {}".format(i))
-#    print("  input: {} ({})".format(input_idx, int_to_notes[int(input_idx)]))
-#    print("  expected output: {} ({})".format(target_idx, int_to_notes[int(target_idx)]))
+
+network_input = []
+network_output = []
+for track in notes:
+    for i in range(0, len((track)) - sequence_length, 1):
+        sequence_in = track[i:i + sequence_length]
+        sequence_out = track[i+1:i + sequence_length+1]
+        network_input.append(sequence_in)
+        network_output.append(sequence_out)
+
+training_data=[(network_input[i],network_output[i]) for i in range(len(network_input))]
+
+DATASET_SIZE=len(training_data)
+train_size = int(0.8 * DATASET_SIZE)
+test_size = int(0.20 * DATASET_SIZE)
+
 examples_per_epoch = sum([len(track) for track in notes])//sequence_length
 BATCH_SIZE = 64
 steps_per_epoch = examples_per_epoch//BATCH_SIZE
 BUFFER_SIZE = 10000
 dataset = dataset.shuffle(BUFFER_SIZE).batch(BATCH_SIZE, drop_remainder=True)
 
+data_train=dataset.take(train_size)
+data_test=dataset.skip(train_size)
 
 
 # Length of the vocabulary in chars
@@ -85,28 +90,17 @@ else:
     tf.keras.layers.LSTM, recurrent_activation='sigmoid')
   
 def build_model(vocab_size, embedding_dim, rnn_units, batch_size):
-  model = tf.keras.Sequential([
-    tf.keras.layers.Embedding(vocab_size, embedding_dim, 
-                              batch_input_shape=[batch_size, None]),
-    rnn(rnn_units,
-        return_sequences=True, 
-        recurrent_initializer='glorot_uniform',
-        stateful=True),
-    tf.keras.layers.Dense(vocab_size)
-  ])
-  return model  
+    model=tf.keras.Sequential()
+    model.add(tf.keras.layers.Embedding(vocab_size, embedding_dim,batch_input_shape=[batch_size, None]))
+    model.add(rnn(rnn_units,return_sequences=True,recurrent_initializer='glorot_uniform',stateful=True))
+    model.add(tf.keras.layers.Dense(vocab_size))
+
+    return model  
   
 
         
 model = build_model(vocab_size = vocab_size,embedding_dim=embedding_dim,rnn_units=rnn_units,batch_size=BATCH_SIZE)
 
-for input_example_batch, target_example_batch in dataset.take(1): 
-  example_batch_predictions = model(input_example_batch)
-  
-  print(example_batch_predictions.shape, "# (batch_size, sequence_length, vocab_size)")
-        
-sampled_indices = tf.random.categorical(example_batch_predictions[0], num_samples=1)
-sampled_indices = tf.squeeze(sampled_indices,axis=-1).numpy()
 
 def loss(labels, logits):
   return tf.keras.losses.sparse_categorical_crossentropy(labels, logits, from_logits=True)
@@ -125,8 +119,10 @@ checkpoint_callback=tf.keras.callbacks.ModelCheckpoint(
     filepath=checkpoint_prefix,
     save_weights_only=True)
 
+Early_Stopping=tf.keras.callbacks.EarlyStopping(monitor='loss',min_delta=0.01,patience=5)
+
 EPOCHS=100
-history = model.fit(dataset.repeat(), epochs=EPOCHS, steps_per_epoch=steps_per_epoch, callbacks=[checkpoint_callback])
+history = model.fit(dataset.repeat(), epochs=EPOCHS, steps_per_epoch=steps_per_epoch, callbacks=[checkpoint_callback,Early_Stopping])
 
 #rebuild du model pour accepter un nouevau batch_size
 model = build_model(vocab_size, embedding_dim, rnn_units, batch_size=1)
@@ -167,6 +163,35 @@ def generate_music(model, start_notes):
 
   return [start_notes]+notes_generated
 
+
+#clf = GridSearchCV(sk_nn,param_grid,cv=4,n_jobs=1,verbose=2)
+#
+#clf.fit(X,y)
+#ostr =[]
+#ostr.append("Best parameters set found on development set:")
+##ostr.append("")
+#ostr.append(str(clf.best_params_))
+#ostr.append("")
+#ostr.append("Grid scores on development set:")
+##ostr.append("")
+#means = clf.cv_results_['mean_test_score']
+#stds = clf.cv_results_['std_test_score']
+#for mean, std, params in zip(means, stds, clf.cv_results_['params']):
+#    ostr.append("%0.3f (+/-%0.03f) for %r"
+#          % (mean, std * 2, params))
+##   ostr.append("")
+#
+#ostr = '\n'.join(ostr)
+#print(ostr)
+#with open(outfile+'.txt','w') as f:
+#    f.write(ostr)
+#pickle.dump(clf.cv_results_,open(outfile+'.p','wb'))
+
+
+
+
+
+
 res=generate_music(model,list(nb_occ.keys())[0])
 res2=[]
 for i in range(len(res)):
@@ -176,5 +201,5 @@ for i in range(len(res)):
     tirage=np.random.choice(len(velo_keys), 1, p=velo_values)[0]
 
     res2.append((res[i][0],res[i][1],velo_keys[tirage]))
-filename="allo4.mid"
+filename="allo_seq_len5_beth.mid"
 create_midi_file(res2,filename)
