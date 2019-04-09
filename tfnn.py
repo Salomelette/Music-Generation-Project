@@ -17,7 +17,7 @@ url_error='https://discordapp.com/api/webhooks/495517689545097246/B-_MUSOcJkAozN
 database = os.listdir("./database")
 notes, vel, nb_occ = extract(database)
 
-
+#https://en.wikipedia.org/wiki/Perplexity pour evaluer le bruit 
 
 sequence_length = 10
 notes2int={u:i for i,u in enumerate(nb_occ.keys())}
@@ -34,7 +34,7 @@ for track in notes_as_int[1:]:
     
 dataset=dataset_Final
 
- 
+ # dataset from_generator 
 sequences = dataset.batch(sequence_length+1, drop_remainder=True)
 
 
@@ -66,6 +66,7 @@ BATCH_SIZE = 64
 steps_per_epoch = examples_per_epoch//BATCH_SIZE
 BUFFER_SIZE = 10000
 dataset = dataset.shuffle(BUFFER_SIZE).batch(BATCH_SIZE, drop_remainder=True)
+#shuffle&batch
 
 data_train=dataset.take(train_size)
 data_test=dataset.skip(train_size)
@@ -76,10 +77,10 @@ vocab_size = len(nb_occ.keys())
 
 # The embedding dimension 
 embedding_dim = 256
+#remplacer les notes peut presentes par "unknown"
 
 # Number of RNN units
 rnn_units = 1024
-
 
 if tf.test.is_gpu_available():
   rnn = tf.keras.layers.CuDNNLSTM
@@ -103,6 +104,8 @@ model = build_model(vocab_size = vocab_size,embedding_dim=embedding_dim,rnn_unit
 
 
 def loss(labels, logits):
+  #return tf.nn.softmax_cross_entropy_with_logits_v2(labels,logits)
+  #return tf.losses.softmax_cross_entropy(labels,logits)
   return tf.keras.losses.sparse_categorical_crossentropy(labels, logits, from_logits=True)
 
 #example_batch_loss  = loss(target_example_batch, example_batch_predictions)
@@ -121,7 +124,7 @@ checkpoint_callback=tf.keras.callbacks.ModelCheckpoint(
 
 Early_Stopping=tf.keras.callbacks.EarlyStopping(monitor='loss',min_delta=0.01,patience=5)
 
-EPOCHS=100
+EPOCHS=1
 history = model.fit(dataset.repeat(), epochs=EPOCHS, steps_per_epoch=steps_per_epoch, callbacks=[checkpoint_callback,Early_Stopping])
 
 #rebuild du model pour accepter un nouevau batch_size
@@ -130,7 +133,8 @@ model.load_weights(tf.train.latest_checkpoint(checkpoint_dir))
 model.build(tf.TensorShape([1, None]))
 
 def generate_music(model, start_notes):
-
+#<Beggining of track>
+#<end of track>
   num_generate = 1000
 
   input_eval = [notes2int[start_notes]]
@@ -150,11 +154,12 @@ def generate_music(model, start_notes):
       predictions = model(input_eval)
       # remove the batch dimension
       predictions = tf.squeeze(predictions, 0)
-
+      #print(predictions.shape)
       # using a multinomial distribution to predict the word returned by the model
       predictions = predictions / temperature
-      predicted_id = tf.multinomial(predictions, num_samples=1)[-1,0].numpy()
-      
+      #predicted_id = tf.multinomial(predictions, num_samples=1)[-1,0].numpy()
+      predicted_id = tf.random.categorical(predictions, num_samples=1)[-1,0].numpy()
+
       # We pass the predicted word as the next input to the model
       # along with the previous hidden state
       input_eval = tf.expand_dims([predicted_id], 0)
