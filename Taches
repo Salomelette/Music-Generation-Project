@@ -7,3 +7,5 @@ Utiliser un generateur pour charger les données dans les dataSets
 séparer les fichiers midi en train/test
 Ajouter <beginning of track> <end of track> sur chaque track
 remplacer les notes trop peu présente par <UNK>
+
+Perplexité pour évaluer la qualité ?
