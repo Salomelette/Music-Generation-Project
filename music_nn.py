@@ -8,11 +8,7 @@ import torch.optim as optim
 from extraction_fichiers import extract
 
 import os
-from discord_hooks import Webhook
-url_web_hook='https://discordapp.com/api/webhooks/485826787574677564/jvaxi81nGdyoIxKng3LzqF9Fqh66tSPpolQ5vWSmVw7nYmfHAYiVfpaptmvZWveyitvG'
-url_compte_jour='https://discordapp.com/api/webhooks/487302586072956928/cn99JoRVpyNLo8UvSvmuuFbsG7CzIdfGv5v8EMGcAhDcoMLbZNIjhho4SOVXtZpuUzCJ'
-url_error='https://discordapp.com/api/webhooks/495517689545097246/B-_MUSOcJkAozN56jj-lFri6f84jvdLvbpY0K4hcdwcShzhrBPBaJHva3lVTHTsQN0J3'
-#letsgetit
+
 
 database = os.listdir("./database")
 notes, vel, nb_occ = extract(database)
@@ -80,8 +76,7 @@ if __name__=="__main__":
     training_data=training_data[:int(len(training_data)*0.75)]
     print("allo")
     print(len(training_data))
-    msg = Webhook(url_error,msg="Start")
-    msg.post()
+
     for epoch in range(10):  # again, normally you would NOT do 300 epochs, it is toy data
         for sentence, tags in training_data[:]:
             # Step 1. Remember that Pytorch accumulates gradients.
@@ -103,8 +98,7 @@ if __name__=="__main__":
             loss.backward()
             optimizer.step()
         print("epoch {}".format(epoch))
-        msg = Webhook(url_error,msg="epoch {}".format(epoch))
-        msg.post()
+
     
     torch.save(model.state_dict(),"lstm_model.model")
        

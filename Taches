@@ -1,4 +1,9 @@
-prendre en compte le temps, toutes les hauteurs ( enlever le % )
-enlever les tps à 0
-CDM d'odre 1 à K 
-BPE ( explication sur le carnet )
+séparer en 3 fichiers:
+-gestionnaire de données
+-apprentissage
+-generation
+
+Utiliser un generateur pour charger les données dans les dataSets
+séparer les fichiers midi en train/test
+Ajouter <beginning of track> <end of track> sur chaque track
+remplacer les notes trop peu présente par <UNK>
