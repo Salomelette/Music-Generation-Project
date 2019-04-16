@@ -26,50 +26,50 @@ def convert_midibd(database):
     return bd 
 
 
-def extract(database):
-    try :
-        with open('database.p','rb') as file:
-            data=pkl.load(file)
-            print("fichier trouvé")
-            return data[0],data[1],data[2]
-    except Exception as e:
-        print(e)
-        print("lecture des fichiers")
-    res = []
-    midibd = convert_midibd(database)
-    velocity = dict()
-    total = []
-    for m in midibd:
-        resm = []
-        for track in m.tracks:
-            for msg in track:
-                print(msg)
-                if not msg.is_meta and msg.type == 'note_on':
-                    
-                    if msg.time != 0 and msg.velocity!=0:
-                        note = msg.note,msg.time
-                        if msg.time>5:
-                            note = msg.note,round(msg.time,-1)
-                        else:
-                            note=msg.note,1
-                        resm.append(note)
-                        total.append(note)
-                        vel = msg.velocity
-                        if note not in velocity.keys():
-                            velocity[note]=Counter()
-                        velocity[note][vel] += 1
-
-        res.append(resm)
-
-    nb_occ = Counter(total)
-    for i in nb_occ:
-        for keys in velocity[i]:
-            velocity[i][keys] /= nb_occ[i]
-
-    with open('database.p','wb') as file:
-        pass
-        pkl.dump([res,velocity,nb_occ],file)
-    return res, velocity, nb_occ
+#def extract(database):
+#    try :
+#        with open('database.p','rb') as file:
+#            data=pkl.load(file)
+#            print("fichier trouvé")
+#            return data[0],data[1],data[2]
+#    except Exception as e:
+#        print(e)
+#        print("lecture des fichiers")
+#    res = []
+#    midibd = convert_midibd(database)
+#    velocity = dict()
+#    total = []
+#    for m in midibd:
+#        resm = []
+#        for track in m.tracks:
+#            for msg in track:
+#                print(msg)
+#                if not msg.is_meta and msg.type == 'note_on':
+#                    
+#                    if msg.time != 0 and msg.velocity!=0:
+#                        note = msg.note,msg.time
+#                        if msg.time>5:
+#                            note = msg.note,round(msg.time,-1)
+#                        else:
+#                            note=msg.note,1
+#                        resm.append(note)
+#                        total.append(note)
+#                        vel = msg.velocity
+#                        if note not in velocity.keys():
+#                            velocity[note]=Counter()
+#                        velocity[note][vel] += 1
+#
+#        res.append(resm)
+#
+#    nb_occ = Counter(total)
+#    for i in nb_occ:
+#        for keys in velocity[i]:
+#            velocity[i][keys] /= nb_occ[i]
+#
+#    with open('database.p','wb') as file:
+#        pass
+#        pkl.dump([res,velocity,nb_occ],file)
+#    return res, velocity, nb_occ
 
 def extract(database):
     try :
@@ -88,11 +88,13 @@ def extract(database):
     for m in midibd:
         resm = []
         for track in m.tracks:
-            for i in range(len(track)):
-                print(msg)
-                if not msg.is_meta:# and msg.type == 'note_on':
-                    
-                    if msg.time != 0 and msg.velocity!=0:
+            for msg in track:
+                #print(msg)
+                if not msg.is_meta and (msg.type == 'note_on' or msg.type=='note_off'):
+                    if not note_on and msg.velocity!=0:
+                        stock_velocity=msg.velocity
+                        note_on=True
+                    else:
                         note = msg.note,msg.time
                         if msg.time>5:
                             note = msg.note,round(msg.time,-1)
@@ -100,10 +102,11 @@ def extract(database):
                             note=msg.note,1
                         resm.append(note)
                         total.append(note)
-                        vel = msg.velocity
+                        vel = stock_velocity
                         if note not in velocity.keys():
                             velocity[note]=Counter()
                         velocity[note][vel] += 1
+                        note_on=False
 
         res.append(resm)
 
@@ -113,7 +116,6 @@ def extract(database):
             velocity[i][keys] /= nb_occ[i]
 
     with open('database.p','wb') as file:
-        pass
         pkl.dump([res,velocity,nb_occ],file)
     return res, velocity, nb_occ
 
