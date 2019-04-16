@@ -16,8 +16,7 @@ database = os.listdir("./database")
 # database_test = database[n+1:]
 notes, vel, nb_occ = extract(database)
 
-nb_occ["BOT"] = 0
-nb_occ["EOT"] = 0
+
 
 
 #https://en.wikipedia.org/wiki/Perplexity pour evaluer le bruit 
@@ -64,8 +63,12 @@ for track in notes_as_int:
 training_data=[(network_input[i],network_output[i]) for i in range(len(network_input))]
 print(network_input[0])
 def generator():
-  for i in range(len(network_input)):
-    yield (tf.convert_to_tensor(network_input[i]),tf.convert_to_tensor(network_output[i]))
+    for track in notes_as_int:
+      for i in range(0, len((track)) - sequence_length, 1):
+          sequence_in = track[i:i + sequence_length]
+          sequence_out = track[i+1:i + sequence_length+1]
+          yield sequence_in,sequence_out
+    #yield (tf.convert_to_tensor(network_input[i]),tf.convert_to_tensor(network_output[i]))
 
 #dataset = tf.data.Dataset.from_generator(generator,(tf.TensorArray(dtype=tf.int64,size=sequence_length),tf.TensorArray(dtype=tf.int64,size=sequence_length)),(tf.TensorShape([10]),tf.TensorShape([10])))
 dataset = tf.data.Dataset.from_generator(generator,(tf.int64,tf.int64))#,(tf.TensorShape([10]),tf.TensorShape([10])))
@@ -89,7 +92,7 @@ dataset = dataset.shuffle(BUFFER_SIZE).batch(BATCH_SIZE, drop_remainder=True) #d
 # Length of the vocabulary in chars
 vocab_size = len(nb_occ.keys())
 print(nb_occ)
-exit()
+#exit()
 # The embedding dimension 
 embedding_dim = 256
 #remplacer les notes peu presentes par "unknown"
@@ -135,7 +138,7 @@ checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt_{epoch}")
 
 checkpoint_callback=tf.keras.callbacks.ModelCheckpoint(
     filepath=checkpoint_prefix,
-    save_weights_only=True)
+    save_weights_only=True,period=5)
 
 Early_Stopping=tf.keras.callbacks.EarlyStopping(monitor='loss',min_delta=0.01,patience=5)
 

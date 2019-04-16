@@ -1,3 +1,6 @@
+
+#https://stackoverflow.com/questions/43321950/synthesia-plays-well-midi-file-without-any-note-off-event
+
 import numpy as np
 import mido 
 import os 
@@ -40,7 +43,9 @@ def extract(database):
         resm = []
         for track in m.tracks:
             for msg in track:
+                print(msg)
                 if not msg.is_meta and msg.type == 'note_on':
+                    
                     if msg.time != 0 and msg.velocity!=0:
                         note = msg.note,msg.time
                         if msg.time>5:
@@ -64,6 +69,65 @@ def extract(database):
     with open('database.p','wb') as file:
         pkl.dump([res,velocity,nb_occ],file)
     return res, velocity, nb_occ
+
+def extract_train_test(database,test_size=0.2):
+    try :
+        with open('database.p','rb') as file:
+            data=pkl.load(file)
+            print("fichier trouvé")
+            return data[0],data[1],data[2],data[3]
+    except Exception as e:
+        print(e)
+        print("lecture des fichiers")
+
+
+    res = []
+    midibd = convert_midibd(database)
+    velocity = dict()
+    total = []
+    for m in midibd[:int(len(midibd)*(1-test_size))]:
+        resm = []
+        for track in m.tracks:
+            for msg in track:
+                if not msg.is_meta and msg.type == 'note_on':
+                    if msg.time != 0 and msg.velocity!=0:
+                        note = msg.note,msg.time
+                        if msg.time>5:
+                            note = msg.note,round(msg.time,-1)
+                        else:
+                            note=msg.note,1
+                        resm.append(note)
+                        total.append(note)
+                        vel = msg.velocity
+                        if note not in velocity.keys():
+                            velocity[note]=Counter()
+                        velocity[note][vel] += 1
+
+        res.append(resm)
+    test=[]
+    for m in midibd[int(len(midibd)*(1-test_size)):]:
+        resm = []
+        for track in m.tracks:
+            for msg in track:
+                if not msg.is_meta and msg.type == 'note_on':
+                    if msg.time != 0 and msg.velocity!=0:
+                        note = msg.note,msg.time
+                        if msg.time>5:
+                            note = msg.note,round(msg.time,-1)
+                        else:
+                            note=msg.note,1
+                        resm.append(note)
+
+        test.append(resm)
+
+    nb_occ = Counter(total)
+    for i in nb_occ:
+        for keys in velocity[i]:
+            velocity[i][keys] /= nb_occ[i]
+
+    with open('database.p','wb') as file:
+        pkl.dump([res,velocity,nb_occ,test],file)
+    return res, velocity, nb_occ,test
 
 def find_bigram(list_track,nb):
     replacement_table=dict()
