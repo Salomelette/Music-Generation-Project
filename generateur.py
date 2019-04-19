@@ -7,7 +7,7 @@ def create_midi_file(notes,filename):
     track=MidiTrack()
     outfile=MidiFile()
     outfile.tracks.append(track)
-    track.append(Message('program_change', program=12))
+    track.append(Message('program_change', program=1))
 
     for note in notes:
         track.append(Message('note_on', note=note[0], velocity=note[2], time=0))

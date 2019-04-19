@@ -176,6 +176,11 @@ def extract_train_test(database,test_size):
                             note=msg.note,1
                         resm.append(note)
                         total.append(note)
+                        vel = stock_velocity
+                        if note not in velocity.keys():
+                            velocity[note]=Counter()
+                        velocity[note][vel] += 1
+                        note_on=False
 
         test.append(resm)
 

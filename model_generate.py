@@ -6,7 +6,7 @@ import numpy as np
 
 def generate_music(model,notes2int,int2notes):
 
-    num_generate = 1000
+    num_generate = 3000
 
     input_eval = [notes2int["BOT"]]
     input_eval = tf.expand_dims(input_eval, 0)
@@ -62,5 +62,5 @@ if __name__=="__main__":
 
     res=generate_music(model,notes2int,int2notes)[1:-1]
     
-    decode_and_create("premier_test2.mid",res)
+    decode_and_create("premier_test3.mid",res)
     

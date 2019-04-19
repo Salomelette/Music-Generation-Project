@@ -55,7 +55,7 @@ def train_model_test(datapath,sequence_length,batch_size,nb_epoch=100):
     checkpoint_dir = './training_checkpoints'
     checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt_{epoch}")
     checkpoint_callback=tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_prefix,save_weights_only=True,period=5)
-
+    Early_Stopping=tf.keras.callbacks.EarlyStopping(monitor='loss',min_delta=0.001,patience=5)
     
     history = model.fit(dataset.repeat(), epochs=nb_epoch, steps_per_epoch=steps_per_epoch, callbacks=[checkpoint_callback])
     
