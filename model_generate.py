@@ -15,7 +15,7 @@ def generate_music(model,notes2int,int2notes):
 
     temperature = 1.0
     model.reset_states()
-    while "EOT" not in notes_generated:
+    while "EOT" not in notes_generated and len(notes_generated)<num_generate:
     #for i in range(num_generate):
         predictions = model(input_eval)
         # remove the batch dimension
@@ -62,5 +62,5 @@ if __name__=="__main__":
 
     res=generate_music(model,notes2int,int2notes)[1:-1]
     
-    decode_and_create("premier_test.mid",res)
+    decode_and_create("premier_test2.mid",res)
     

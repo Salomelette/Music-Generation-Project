@@ -36,7 +36,7 @@ def prepareData(path,sequence_length=10):
 def prepareData_test(path,sequence_length=10,test=0.2):
 
     database = os.listdir(path)
-    notes, vel, nb_occ, notes_test= extract(database)
+    notes, vel, nb_occ, notes_test= extract_train_test(database,test)
         
     for track in notes+notes_test:
         track.insert(0,"BOT")
@@ -47,9 +47,7 @@ def prepareData_test(path,sequence_length=10,test=0.2):
     notes2int={u:i for i,u in enumerate(nb_occ.keys())}
     int2notes = np.array(list(nb_occ.keys()))
     notes_as_int = [np.array([notes2int[c] for c in track]) for track in notes]
-
-    notes_as_int_test = [np.array([notes2int[c] for c in track]) for track in notes+notes_test]
-
+    notes_as_int_test = [np.array([notes2int[c] for c in track]) for track in notes_test]
     def generator():
         for track in notes_as_int:
             for i in range(0, len((track)) - sequence_length, 1):
@@ -71,4 +69,4 @@ def prepareData_test(path,sequence_length=10,test=0.2):
     with open("model_data.p",'wb') as file:
         pkl.dump({"occ":nb_occ,"n2i":notes2int,"i2n":int2notes,"vel":vel},file)
 
-    return dataset,nb_occ,notes,dataset_test
+    return dataset,nb_occ,notes,dataset_test,notes_test

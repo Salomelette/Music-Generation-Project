@@ -119,9 +119,9 @@ def extract(database):
         pkl.dump([res,velocity,nb_occ],file)
     return res, velocity, nb_occ
 
-def extract_train_test(database,test_size=0.2):
+def extract_train_test(database,test_size):
     try :
-        with open('database.p','rb') as file:
+        with open('database_test.p','rb') as file:
             data=pkl.load(file)
             print("fichier trouvé")
             return data[0],data[1],data[2],data[3]
@@ -134,12 +134,16 @@ def extract_train_test(database,test_size=0.2):
     midibd = convert_midibd(database)
     velocity = dict()
     total = []
+    note_on=False
     for m in midibd[:int(len(midibd)*(1-test_size))]:
         resm = []
         for track in m.tracks:
             for msg in track:
-                if not msg.is_meta and msg.type == 'note_on':
-                    if msg.time != 0 and msg.velocity!=0:
+                if not msg.is_meta and (msg.type == 'note_on' or msg.type=='note_off'):
+                    if not note_on and msg.velocity!=0:
+                        stock_velocity=msg.velocity
+                        note_on=True
+                    else:
                         note = msg.note,msg.time
                         if msg.time>5:
                             note = msg.note,round(msg.time,-1)
@@ -147,34 +151,42 @@ def extract_train_test(database,test_size=0.2):
                             note=msg.note,1
                         resm.append(note)
                         total.append(note)
-                        vel = msg.velocity
+                        vel = stock_velocity
                         if note not in velocity.keys():
                             velocity[note]=Counter()
                         velocity[note][vel] += 1
+                        note_on=False
 
         res.append(resm)
     test=[]
+    note_on=False
     for m in midibd[int(len(midibd)*(1-test_size)):]:
         resm = []
         for track in m.tracks:
             for msg in track:
-                if not msg.is_meta and msg.type == 'note_on':
-                    if msg.time != 0 and msg.velocity!=0:
+                if not msg.is_meta and (msg.type == 'note_on' or msg.type=='note_off'):
+                    if not note_on and msg.velocity!=0:
+                        stock_velocity=msg.velocity
+                        note_on=True
+                    else:
                         note = msg.note,msg.time
                         if msg.time>5:
                             note = msg.note,round(msg.time,-1)
                         else:
                             note=msg.note,1
                         resm.append(note)
+                        total.append(note)
 
         test.append(resm)
 
     nb_occ = Counter(total)
     for i in nb_occ:
-        for keys in velocity[i]:
-            velocity[i][keys] /= nb_occ[i]
+        if i in velocity.keys():
+            for keys in velocity[i]:
+                velocity[i][keys] /= nb_occ[i]
+                
 
-    with open('database.p','wb') as file:
+    with open('database_test.p','wb') as file:
         pkl.dump([res,velocity,nb_occ,test],file)
     return res, velocity, nb_occ,test
 
