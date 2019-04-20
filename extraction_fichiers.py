@@ -25,52 +25,6 @@ def convert_midibd(database):
             print('{} MThd not found. Probably not a MIDI file'.format(m))
     return bd 
 
-
-#def extract(database):
-#    try :
-#        with open('database.p','rb') as file:
-#            data=pkl.load(file)
-#            print("fichier trouvé")
-#            return data[0],data[1],data[2]
-#    except Exception as e:
-#        print(e)
-#        print("lecture des fichiers")
-#    res = []
-#    midibd = convert_midibd(database)
-#    velocity = dict()
-#    total = []
-#    for m in midibd:
-#        resm = []
-#        for track in m.tracks:
-#            for msg in track:
-#                print(msg)
-#                if not msg.is_meta and msg.type == 'note_on':
-#                    
-#                    if msg.time != 0 and msg.velocity!=0:
-#                        note = msg.note,msg.time
-#                        if msg.time>5:
-#                            note = msg.note,round(msg.time,-1)
-#                        else:
-#                            note=msg.note,1
-#                        resm.append(note)
-#                        total.append(note)
-#                        vel = msg.velocity
-#                        if note not in velocity.keys():
-#                            velocity[note]=Counter()
-#                        velocity[note][vel] += 1
-#
-#        res.append(resm)
-#
-#    nb_occ = Counter(total)
-#    for i in nb_occ:
-#        for keys in velocity[i]:
-#            velocity[i][keys] /= nb_occ[i]
-#
-#    with open('database.p','wb') as file:
-#        pass
-#        pkl.dump([res,velocity,nb_occ],file)
-#    return res, velocity, nb_occ
-
 def extract(database):
     try :
         with open('database.p','rb') as file:
@@ -93,6 +47,13 @@ def extract(database):
                 if not msg.is_meta and (msg.type == 'note_on' or msg.type=='note_off'):
                     if not note_on and msg.velocity!=0:
                         stock_velocity=msg.velocity
+                        if msg.time>5:
+                            note="PAUSE",round(msg.time,-1)
+                            if note not in velocity.keys():
+                                velocity[note]=Counter()
+                            velocity[note][0] += 1
+                            total.append(note)
+                            resm.append(note)
                         note_on=True
                     else:
                         note = msg.note,msg.time
@@ -111,6 +72,7 @@ def extract(database):
         res.append(resm)
 
     nb_occ = Counter(total)
+    print(len(nb_occ))
     for i in nb_occ:
         for keys in velocity[i]:
             velocity[i][keys] /= nb_occ[i]
@@ -142,6 +104,13 @@ def extract_train_test(database,test_size):
                 if not msg.is_meta and (msg.type == 'note_on' or msg.type=='note_off'):
                     if not note_on and msg.velocity!=0:
                         stock_velocity=msg.velocity
+                        if msg.time>5:
+                            note="PAUSE",round(msg.time,-1)
+                            if note not in velocity.keys():
+                                velocity[note]=Counter()
+                            velocity[note][0] += 1
+                            total.append(note)
+                            resm.append(note)
                         note_on=True
                     else:
                         note = msg.note,msg.time
@@ -167,6 +136,13 @@ def extract_train_test(database,test_size):
                 if not msg.is_meta and (msg.type == 'note_on' or msg.type=='note_off'):
                     if not note_on and msg.velocity!=0:
                         stock_velocity=msg.velocity
+                        if msg.time>5:
+                            note="PAUSE",round(msg.time,-1)
+                            if note not in velocity.keys():
+                                velocity[note]=Counter()
+                            velocity[note][0] += 1
+                            total.append(note)
+                            resm.append(note)
                         note_on=True
                     else:
                         note = msg.note,msg.time
@@ -185,6 +161,7 @@ def extract_train_test(database,test_size):
         test.append(resm)
 
     nb_occ = Counter(total)
+    print(len(nb_occ))
     for i in nb_occ:
         if i in velocity.keys():
             for keys in velocity[i]:

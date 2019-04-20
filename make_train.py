@@ -43,7 +43,7 @@ def train_model(datapath,sequence_length,batch_size,nb_epoch=100):
     history = model.fit(dataset.repeat(), epochs=nb_epoch, steps_per_epoch=steps_per_epoch, callbacks=[checkpoint_callback])
 
 def train_model_test(datapath,sequence_length,batch_size,nb_epoch=100):
-    dataset,nb_occ,notes,dataset_test,notes_test=prepareData_test(datapath,sequence_length)
+    dataset,nb_occ,notes,dataset_test,notes_test=prepareData_test(datapath,sequence_length,test=0.2)
     vocab_size=len(nb_occ)
     examples_per_epoch = sum([len(track) for track in notes])//sequence_length
     steps_per_epoch = examples_per_epoch//batch_size
@@ -55,7 +55,7 @@ def train_model_test(datapath,sequence_length,batch_size,nb_epoch=100):
     checkpoint_dir = './training_checkpoints'
     checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt_{epoch}")
     checkpoint_callback=tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_prefix,save_weights_only=True,period=5)
-    Early_Stopping=tf.keras.callbacks.EarlyStopping(monitor='loss',min_delta=0.001,patience=5)
+    Early_Stopping=tf.keras.callbacks.EarlyStopping(monitor='loss',min_delta=0.001,patience=10)
     
     history = model.fit(dataset.repeat(), epochs=nb_epoch, steps_per_epoch=steps_per_epoch, callbacks=[checkpoint_callback])
     
@@ -66,6 +66,6 @@ def train_model_test(datapath,sequence_length,batch_size,nb_epoch=100):
     score_test=model.evaluate(dataset_test,steps=steps_per_epoch)
     print(score_test)
 if __name__=="__main__":
-    
+    #train_model(datapath="./database",sequence_length=10,batch_size=4,nb_epoch=200)
     
     train_model_test(datapath="./database",sequence_length=100,batch_size=64,nb_epoch=100)

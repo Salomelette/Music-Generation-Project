@@ -41,9 +41,12 @@ def decode_and_create(filename,res):
         velo_keys=list(vel[tuple(res[i])].keys())
         velo_values=list(vel[tuple(res[i])].values())
         tirage=np.random.choice(len(velo_keys), 1, p=velo_values)[0]
-
-        res2.append((res[i][0],res[i][1],velo_keys[tirage]))
-    print(len(res2))
+        if res[i][0]=="PAUSE":
+            res2.append((64,res[i][1],velo_keys[tirage]))
+        else:
+            res2.append((res[i][0],res[i][1],velo_keys[tirage]))
+    # print(len(res2))
+    #print(res2)
     create_midi_file(res2,filename)
 
 if __name__=="__main__":
@@ -59,8 +62,12 @@ if __name__=="__main__":
     model = build_model(vocab_size, batch_size=1)
     model.load_weights(tf.train.latest_checkpoint(checkpoint_dir))
     model.build(tf.TensorShape([1, None]))
-
-    res=generate_music(model,notes2int,int2notes)[1:-1]
     
-    decode_and_create("premier_test3.mid",res)
+    res=generate_music(model,notes2int,int2notes)
+    if res[-1]=="EOT":
+        res=res[1:-1]
+    else:
+        res=res[1:]
+    #print(res)
+    decode_and_create("premier_test9.mid",res)
     
