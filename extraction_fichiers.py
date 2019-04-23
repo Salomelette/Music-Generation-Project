@@ -25,7 +25,7 @@ def convert_midibd(database):
             print('{} MThd not found. Probably not a MIDI file'.format(m))
     return bd 
 
-def extract(database):
+def extract(database,pause=False):
     try :
         with open('database.p','rb') as file:
             data=pkl.load(file)
@@ -47,13 +47,14 @@ def extract(database):
                 if not msg.is_meta and (msg.type == 'note_on' or msg.type=='note_off'):
                     if not note_on and msg.velocity!=0:
                         stock_velocity=msg.velocity
-                        if msg.time>5:
-                            note="PAUSE",round(msg.time,-1)
-                            if note not in velocity.keys():
-                                velocity[note]=Counter()
-                            velocity[note][0] += 1
-                            total.append(note)
-                            resm.append(note)
+                        if pause:
+                            if msg.time>5:
+                                note="PAUSE",round(msg.time,-1)
+                                if note not in velocity.keys():
+                                    velocity[note]=Counter()
+                                velocity[note][0] += 1
+                                total.append(note)
+                                resm.append(note)
                         note_on=True
                     else:
                         note = msg.note,msg.time
@@ -81,7 +82,7 @@ def extract(database):
         pkl.dump([res,velocity,nb_occ],file)
     return res, velocity, nb_occ
 
-def extract_train_test(database,test_size):
+def extract_train_test(database,test_size,pause=False):
     try :
         with open('database_test.p','rb') as file:
             data=pkl.load(file)
@@ -104,13 +105,14 @@ def extract_train_test(database,test_size):
                 if not msg.is_meta and (msg.type == 'note_on' or msg.type=='note_off'):
                     if not note_on and msg.velocity!=0:
                         stock_velocity=msg.velocity
-                        if msg.time>5:
-                            note="PAUSE",round(msg.time,-1)
-                            if note not in velocity.keys():
-                                velocity[note]=Counter()
-                            velocity[note][0] += 1
-                            total.append(note)
-                            resm.append(note)
+                        if pause:
+                            if msg.time>5:
+                                note="PAUSE",round(msg.time,-1)
+                                if note not in velocity.keys():
+                                    velocity[note]=Counter()
+                                velocity[note][0] += 1
+                                total.append(note)
+                                resm.append(note)
                         note_on=True
                     else:
                         note = msg.note,msg.time
@@ -136,13 +138,14 @@ def extract_train_test(database,test_size):
                 if not msg.is_meta and (msg.type == 'note_on' or msg.type=='note_off'):
                     if not note_on and msg.velocity!=0:
                         stock_velocity=msg.velocity
-                        if msg.time>5:
-                            note="PAUSE",round(msg.time,-1)
-                            if note not in velocity.keys():
-                                velocity[note]=Counter()
-                            velocity[note][0] += 1
-                            total.append(note)
-                            resm.append(note)
+                        if pause:
+                            if msg.time>5:
+                                note="PAUSE",round(msg.time,-1)
+                                if note not in velocity.keys():
+                                    velocity[note]=Counter()
+                                velocity[note][0] += 1
+                                total.append(note)
+                                resm.append(note)
                         note_on=True
                     else:
                         note = msg.note,msg.time

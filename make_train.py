@@ -19,8 +19,10 @@ def build_model(vocab_size, embedding_dim=256, rnn_units=1024, batch_size=64):
     model=tf.keras.Sequential()
     model.add(tf.keras.layers.Embedding(vocab_size, embedding_dim,batch_input_shape=[batch_size, None]))
     model.add(rnn(rnn_units,return_sequences=True,stateful=True))
+    model.add(rnn(rnn_units,return_sequences=True))
+    model.add(rnn(rnn_units,return_sequences=True))
     model.add(tf.keras.layers.Dense(vocab_size))
-
+    #model.add(tf.keras.layers.Activation('softmax'))
     return model
 
 def loss(labels, logits):
@@ -66,6 +68,6 @@ def train_model_test(datapath,sequence_length,batch_size,nb_epoch=100):
     score_test=model.evaluate(dataset_test,steps=steps_per_epoch)
     print(score_test)
 if __name__=="__main__":
-    #train_model(datapath="./database",sequence_length=10,batch_size=4,nb_epoch=200)
+    #train_model(datapath="./database",sequence_length=10,batch_size=4,nb_epoch=100)
     
     train_model_test(datapath="./database",sequence_length=100,batch_size=64,nb_epoch=100)

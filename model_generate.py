@@ -6,7 +6,7 @@ import numpy as np
 
 def generate_music(model,notes2int,int2notes):
 
-    num_generate = 3000
+    num_generate = 100
 
     input_eval = [notes2int["BOT"]]
     input_eval = tf.expand_dims(input_eval, 0)
@@ -15,7 +15,7 @@ def generate_music(model,notes2int,int2notes):
 
     temperature = 1.0
     model.reset_states()
-    while "EOT" not in notes_generated and len(notes_generated)<num_generate:
+    while "EOT" not in notes_generated:# and len(notes_generated)<num_generate:
     #for i in range(num_generate):
         predictions = model(input_eval)
         # remove the batch dimension
@@ -42,7 +42,7 @@ def decode_and_create(filename,res):
         velo_values=list(vel[tuple(res[i])].values())
         tirage=np.random.choice(len(velo_keys), 1, p=velo_values)[0]
         if res[i][0]=="PAUSE":
-            res2.append((64,res[i][1],velo_keys[tirage]))
+            res2.append((64,res[i][1],0))
         else:
             res2.append((res[i][0],res[i][1],velo_keys[tirage]))
     # print(len(res2))
@@ -64,10 +64,11 @@ if __name__=="__main__":
     model.build(tf.TensorShape([1, None]))
     
     res=generate_music(model,notes2int,int2notes)
+    print(res)
     if res[-1]=="EOT":
         res=res[1:-1]
     else:
         res=res[1:]
     #print(res)
-    decode_and_create("premier_test9.mid",res)
+    decode_and_create("premier_test13.mid",res)
     
