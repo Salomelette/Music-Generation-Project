@@ -4,10 +4,10 @@ from extraction_fichiers import extract,extract_train_test
 import os
 import pickle as pkl
 
-def prepareData(path,sequence_length=10):
+def prepareData(path,sequence_length=10,pause=False):
 
     database = os.listdir(path)
-    notes, vel, nb_occ = extract(database)
+    notes, vel, nb_occ = extract(database,pause)
         
     for track in notes:
         track.insert(0,"BOT")
@@ -33,10 +33,10 @@ def prepareData(path,sequence_length=10):
 
     return dataset,nb_occ,notes
 
-def prepareData_test(path,sequence_length=10,test=0.2):
+def prepareData_test(path,sequence_length=10,test=0.2,pause=False):
 
     database = os.listdir(path)
-    notes, vel, nb_occ, notes_test= extract_train_test(database,test)
+    notes, vel, nb_occ, notes_test= extract_train_test(database,test,pause)
         
     for track in notes+notes_test:
         track.insert(0,"BOT")

@@ -27,7 +27,7 @@ def convert_midibd(database):
 
 def extract(database,pause=False):
     try :
-        with open('database.p','rb') as file:
+        with open('databasee.p','rb') as file:
             data=pkl.load(file)
             print("fichier trouvé")
             return data[0],data[1],data[2]
@@ -39,14 +39,27 @@ def extract(database,pause=False):
     velocity = dict()
     total = []
     note_on=False
+    stock_note=None
+    stock_time=0
     for m in midibd:
         resm = []
         for track in m.tracks:
             for msg in track:
                 #print(msg)
                 if not msg.is_meta and (msg.type == 'note_on' or msg.type=='note_off'):
+                    if msg.time==0 and msg.velocity==0:
+                        if pause and stock_time>5:
+                            note="PAUSE",round(stock_time,-1)
+                            if note not in velocity.keys():
+                                    velocity[note]=Counter()
+                            velocity[note][0] += 1
+                            total.append(note)
+                            resm.append(note)
+                        continue
                     if not note_on and msg.velocity!=0:
                         stock_velocity=msg.velocity
+                        stock_note=msg.note
+
                         if pause:
                             if msg.time>5:
                                 note="PAUSE",round(msg.time,-1)
@@ -57,18 +70,36 @@ def extract(database,pause=False):
                                 resm.append(note)
                         note_on=True
                     else:
-                        note = msg.note,msg.time
-                        if msg.time>5:
-                            note = msg.note,round(msg.time,-1)
+                        if msg.note==stock_note:
+                            note = msg.note,msg.time
+                            if msg.time>5:
+                                note = msg.note,round(msg.time,-1)
+                            else:
+                                note=msg.note,1
+                            resm.append(note)
+                            total.append(note)
+                            vel = stock_velocity
+                            if note not in velocity.keys():
+                                velocity[note]=Counter()
+                            velocity[note][vel] += 1
+                            note_on=False
+                            stock_time=msg.time
                         else:
-                            note=msg.note,1
-                        resm.append(note)
-                        total.append(note)
-                        vel = stock_velocity
-                        if note not in velocity.keys():
-                            velocity[note]=Counter()
-                        velocity[note][vel] += 1
-                        note_on=False
+                            if msg.time>5:
+                                note = stock_note,round(msg.time,-1)
+                            else:
+                                note=stock_note,1
+
+                            resm.append(note)
+                            total.append(note)
+                            vel = stock_velocity
+                            if note not in velocity.keys():
+                                velocity[note]=Counter()
+                            velocity[note][vel] += 1
+                            stock_note=msg.note
+                            stock_velocity=msg.velocity
+
+
 
         res.append(resm)
 
@@ -98,13 +129,25 @@ def extract_train_test(database,test_size,pause=False):
     velocity = dict()
     total = []
     note_on=False
+    stock_note=None
+    stock_time=0
     for m in midibd[:int(len(midibd)*(1-test_size))]:
         resm = []
         for track in m.tracks:
             for msg in track:
                 if not msg.is_meta and (msg.type == 'note_on' or msg.type=='note_off'):
+                    if msg.time==0 and msg.velocity==0:
+                        if pause and stock_time>5:
+                            note="PAUSE",round(stock_time,-1)
+                            if note not in velocity.keys():
+                                    velocity[note]=Counter()
+                            velocity[note][0] += 1
+                            total.append(note)
+                            resm.append(note)
+                        continue
                     if not note_on and msg.velocity!=0:
                         stock_velocity=msg.velocity
+                        stock_note=msg.note
                         if pause:
                             if msg.time>5:
                                 note="PAUSE",round(msg.time,-1)
@@ -115,29 +158,55 @@ def extract_train_test(database,test_size,pause=False):
                                 resm.append(note)
                         note_on=True
                     else:
-                        note = msg.note,msg.time
-                        if msg.time>5:
-                            note = msg.note,round(msg.time,-1)
+                        if msg.note==stock_note:
+                            if msg.time>5:
+                                note = msg.note,round(msg.time,-1)
+                            else:
+                                note=msg.note,1
+                            resm.append(note)
+                            total.append(note)
+                            vel = stock_velocity
+                            if note not in velocity.keys():
+                                velocity[note]=Counter()
+                            velocity[note][vel] += 1
+                            note_on=False
+                            stock_time=msg.time
                         else:
-                            note=msg.note,1
-                        resm.append(note)
-                        total.append(note)
-                        vel = stock_velocity
-                        if note not in velocity.keys():
-                            velocity[note]=Counter()
-                        velocity[note][vel] += 1
-                        note_on=False
+                            if msg.time>5:
+                                note = stock_note,round(msg.time,-1)
+                            else:
+                                note=stock_note,1
 
+                            resm.append(note)
+                            total.append(note)
+                            vel = stock_velocity
+                            if note not in velocity.keys():
+                                velocity[note]=Counter()
+                            velocity[note][vel] += 1
+                            stock_note=msg.note
+                            stock_velocity=msg.velocity
         res.append(resm)
     test=[]
     note_on=False
+    stock_note=None
+    stock_time=0
     for m in midibd[int(len(midibd)*(1-test_size)):]:
         resm = []
         for track in m.tracks:
             for msg in track:
                 if not msg.is_meta and (msg.type == 'note_on' or msg.type=='note_off'):
+                    if msg.time==0 and msg.velocity==0:
+                        if pause and stock_time>5:
+                            note="PAUSE",round(stock_time,-1)
+                            if note not in velocity.keys():
+                                    velocity[note]=Counter()
+                            velocity[note][0] += 1
+                            total.append(note)
+                            resm.append(note)
+                        continue
                     if not note_on and msg.velocity!=0:
                         stock_velocity=msg.velocity
+                        stock_note=msg.note
                         if pause:
                             if msg.time>5:
                                 note="PAUSE",round(msg.time,-1)
@@ -148,19 +217,33 @@ def extract_train_test(database,test_size,pause=False):
                                 resm.append(note)
                         note_on=True
                     else:
-                        note = msg.note,msg.time
-                        if msg.time>5:
-                            note = msg.note,round(msg.time,-1)
+                        if msg.note==stock_note:
+                            if msg.time>5:
+                                note = msg.note,round(msg.time,-1)
+                            else:
+                                note=msg.note,1
+                            resm.append(note)
+                            total.append(note)
+                            vel = stock_velocity
+                            if note not in velocity.keys():
+                                velocity[note]=Counter()
+                            velocity[note][vel] += 1
+                            note_on=False
+                            stock_time=msg.time
                         else:
-                            note=msg.note,1
-                        resm.append(note)
-                        total.append(note)
-                        vel = stock_velocity
-                        if note not in velocity.keys():
-                            velocity[note]=Counter()
-                        velocity[note][vel] += 1
-                        note_on=False
+                            if msg.time>5:
+                                note = stock_note,msg.time#,round(msg.time,-1)
+                            else:
+                                note=stock_note,1
 
+                            resm.append(note)
+                            total.append(note)
+                            vel = stock_velocity
+                            if note not in velocity.keys():
+                                velocity[note]=Counter()
+                            velocity[note][vel] += 1
+                            stock_note=msg.note
+                            stock_velocity=msg.velocity
         test.append(resm)
 
     nb_occ = Counter(total)
