@@ -5,6 +5,7 @@ from extraction_fichiers import convert_midibd
 import os
 from mido import Message, MidiFile, MidiTrack
 
+range_note=127
 
 def extract_poly(database):
     res = []
@@ -12,7 +13,7 @@ def extract_poly(database):
     velocity = dict()
     total = []
     current_chord=[]
-
+    ref_chord=np.zeros(range_note)
     for m in midibd:
         resm=[]
         for track in m.tracks:
@@ -24,18 +25,22 @@ def extract_poly(database):
                         current_chord.append(msg.note)
                     else:
                         if len(current_chord)!=0:
-                            resm.append(tuple(current_chord))
+                            ref_chord[current_chord]=1
+                            resm.append(ref_chord)
+                            ref_chord=np.zeros(range_note)
                         current_chord=[]
-                    print(current_chord)
+                    #print(current_chord)
                     #time.sleep(2)
-    return resm
+        res.append(resm)
+    return res
 
 def write_midi_poly(list_chord,filename):#faut changer les valeurs de time et de velocity
     track=MidiTrack()
     outfile=MidiFile()
     outfile.tracks.append(track)
     track.append(Message('program_change', program=1))
-    for chord in list_chord:
+    for ref_chord in list_chord:
+        chord=np.where(ref_chord==1)[0]
         track.append(Message('note_on',note=chord[0],velocity=70,time=120))
         for note in chord[1:]:
             track.append(Message('note_on',note=note,velocity=70,time=0))
@@ -48,4 +53,4 @@ def write_midi_poly(list_chord,filename):#faut changer les valeurs de time et de
 if __name__=="__main__":
     database = os.listdir("./database")
     q=extract_poly(database)
-    write_midi_poly(q,"coldplay.mid")
+    write_midi_poly(q[0],"coldplay.mid")

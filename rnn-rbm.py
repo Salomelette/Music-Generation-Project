@@ -13,11 +13,11 @@ n_hidden_RNN=256
 
 def rnnrbm():
 
-	v = tf.placeholder(tf.float64, [None,input_size])
-	learning_rate = tf.placeholder(tf.float64)
-	size_bt = tf.shape(x)[0]
+    v = tf.placeholder(tf.float64, [None,input_size])
+    learning_rate = tf.placeholder(tf.float64)
+    batch_size = tf.shape(x)[0]
 
-	W   = tf.Variable(tf.zeros([input_size, n_hidden]), name="W")
+    W   = tf.Variable(tf.zeros([input_size, n_hidden]), name="W")
     Wuh = tf.Variable(tf.zeros([n_hidden_RNN, n_hidden]), name="Wuh")
     Wuv = tf.Variable(tf.zeros([n_hidden_RNN, input_size]), name="Wuv")
     Wvu = tf.Variable(tf.zeros([input_size, n_hidden_RNN]), name="Wvu")
@@ -27,8 +27,38 @@ def rnnrbm():
     bu  = tf.Variable(tf.zeros([1, n_hidden_RNN]), name="bu")
     u0  = tf.Variable(tf.zeros([1, n_hidden_RNN]), name="u0")
     BH_t = tf.Variable(tf.zeros([1, n_hidden]), name="BH_t") #?
-	BV_t = tf.Variable(tf.zeros([1, input_size]), name="BV_t") #?
+    BV_t = tf.Variable(tf.zeros([1, input_size]), name="BV_t") #?
+
+
+    def rnn_step(u_m1,state):
+        state=tf.reshape(state,[1,n_visible])
+        u=tf.tanh(tf.matmul(u_m1,Wuu)+tf.matmul(state,Wvu)+bu)
+        return u
+
+    def rnn_bias_visible(bv_t,u_m1):
+        bv_t=tf.add(bv,tf.matmul(u_m1,Wuv))
+        return bv_t
+
+    def rnn_bias_hidden(bh_t,u_m1):
+        bh_t=tf.add(bh,tf.matmul(u_m1,Wuh))
 
 
 
 
+
+
+
+
+    tf.assign(BH_t,tf.tile(BH_t,[batch_size,1]))
+    tf.assign(BV_t,tf.tile(BV_t,[batch_size,1]))
+
+    u_t=tf.scan(rnn_step,x,initializer=u0)
+
+    BV_t=tf.reshape(tf.scan(rnn_bias_visible,u_t,tf.zeros[1,n_visible],tf.float64),[batch_size,n_visible])
+    BH_t=tf.reshape(tf.scan(rnn_bias_hidden,u_t,tf.zeros[1,n_hidden],tf.float64),[batch_size,n_hidden])
+
+    cost=rbm.free_energy_cost(x,W,BV_t,BH_t,k=10)
+
+    return x,cost, W,bh,bv, learning_rate, Wuh,Wuv,Wvu,Wuu,bu,u0
+
+    
