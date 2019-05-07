@@ -20,9 +20,11 @@ def gibbs_sampling(vt,W,bh,bv,k):
 
 def free_energy_cost(vt,W,bh,bv,k):
 
-    v_sample=gibbs_sampling(vt,W,bv,bh,k)
-    def F(v)
-         return -tf.reduce_sum(tf.log(1 + tf.exp(tf.matmul(v, W) + bh)), 1) - tf.matmul(v, tf.transpose(bv))
+    v_sample = gibbs_sampling(vt,W,bv,bh,k)
+
+    def F(v):
+        return -tf.reduce_sum(tf.log(1 + tf.exp(tf.matmul(v, W) + bh)), 1) - tf.matmul(v, tf.transpose(bv))
     
-    cost=tf.reduce_mean(tf.sub(F(vt),F(v_sample)))
+    cost = tf.reduce_mean(tf.sub(F(vt),F(v_sample)))
+
     return cost
