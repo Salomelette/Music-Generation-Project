@@ -31,16 +31,16 @@ def rnnrbm():
 
 
     def rnn_step(u_m1,state):
-        state=tf.reshape(state,[1,n_visible])
-        u=tf.tanh(tf.matmul(u_m1,Wuu)+tf.matmul(state,Wvu)+bu)
+        state = tf.reshape(state,[1,n_visible])
+        u = tf.tanh(tf.matmul(u_m1,Wuu)+tf.matmul(state,Wvu)+bu)
         return u
 
     def rnn_bias_visible(bv_t,u_m1):
-        bv_t=tf.add(bv,tf.matmul(u_m1,Wuv))
+        bv_t = tf.add(bv,tf.matmul(u_m1,Wuv))
         return bv_t
 
     def rnn_bias_hidden(bh_t,u_m1):
-        bh_t=tf.add(bh,tf.matmul(u_m1,Wuh))
+        bh_t = tf.add(bh,tf.matmul(u_m1,Wuh))
 
 
 
@@ -52,12 +52,12 @@ def rnnrbm():
     tf.assign(BH_t,tf.tile(BH_t,[batch_size,1]))
     tf.assign(BV_t,tf.tile(BV_t,[batch_size,1]))
 
-    u_t=tf.scan(rnn_step,x,initializer=u0)
+    u_t = tf.scan(rnn_step,x,initializer=u0)
 
-    BV_t=tf.reshape(tf.scan(rnn_bias_visible,u_t,tf.zeros[1,n_visible],tf.float64),[batch_size,n_visible])
-    BH_t=tf.reshape(tf.scan(rnn_bias_hidden,u_t,tf.zeros[1,n_hidden],tf.float64),[batch_size,n_hidden])
+    BV_t = tf.reshape(tf.scan(rnn_bias_visible,u_t,tf.zeros[1,n_visible],tf.float64),[batch_size,n_visible])
+    BH_t = tf.reshape(tf.scan(rnn_bias_hidden,u_t,tf.zeros[1,n_hidden],tf.float64),[batch_size,n_hidden])
 
-    cost=rbm.free_energy_cost(x,W,BV_t,BH_t,k=10)
+    cost = rbm.free_energy_cost(x,W,BV_t,BH_t,k=10)
 
     return x,cost, W,bh,bv, learning_rate, Wuh,Wuv,Wvu,Wuu,bu,u0
 
