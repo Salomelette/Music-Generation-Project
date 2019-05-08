@@ -54,7 +54,7 @@ def rnnrbm():
     BV_t = tf.reshape(tf.scan(rnn_bias_visible,u_t,tf.zeros([1,input_size],tf.float32)),[batch_size,input_size])
     BH_t = tf.reshape(tf.scan(rnn_bias_hidden,u_t,tf.zeros([1,n_hidden],tf.float32)),[batch_size,n_hidden])
 
-    cost = rbm.free_energy_cost(v,W,BH_t,BV_t,k=10)
+    cost = rbm.free_energy_cost(v,W,BH_t,BV_t,k=15)
 
     return v,cost, W,bh,bv, learning_rate, Wuh,Wuv,Wvu,Wuu,bu,u0
 

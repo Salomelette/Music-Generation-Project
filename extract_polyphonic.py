@@ -36,9 +36,9 @@ def extract_poly(database):
         end=np.zeros(range_note)
         end[-1]=-1
         resm.append(end)
-        res.append(resm)
+        res.append(np.array(resm))
 
-    return np.array(res)
+    return res
 
 def write_midi_poly(list_chord,filename):#faut changer les valeurs de time et de velocity
     track=MidiTrack()
@@ -59,5 +59,5 @@ def write_midi_poly(list_chord,filename):#faut changer les valeurs de time et de
 if __name__=="__main__":
     database = os.listdir("./database")
     q=extract_poly(database)
-    print(q)
-    write_midi_poly(q[0],"beeth.mid")
+    #print(q)
+    write_midi_poly(q[0][1:-1],"beeth.mid")
