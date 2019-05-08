@@ -11,8 +11,8 @@ def sample(probs):
 def gibbs_sampling(vt,W,bh,bv,k):
 
     for i in range(k):
-        hk = sample(tf.sigmoid(tf.matmul(W.T,vt) + bh))
-        vt = sample(tf.sigmoid(tf.matmul(W,hk) + bv))
+        hk = sample(tf.sigmoid(tf.matmul(vt,W) + bh))
+        vt = sample(tf.sigmoid(tf.matmul(hk,tf.transpose(W)) + bv))
 
     #stop_gradient ? 
 
@@ -20,11 +20,11 @@ def gibbs_sampling(vt,W,bh,bv,k):
 
 def free_energy_cost(vt,W,bh,bv,k):
 
-    v_sample = gibbs_sampling(vt,W,bv,bh,k)
+    v_sample = gibbs_sampling(vt,W,bh,bv,k)
 
     def F(v):
-        return -tf.reduce_sum(tf.log(1 + tf.exp(tf.matmul(v, W) + bh)), 1) - tf.matmul(v, tf.transpose(bv))
+        return  -tf.reduce_sum(tf.log(1 + tf.exp(tf.matmul(v, W) + bh)), 1) - tf.matmul(v, tf.transpose(bv))
     
-    cost = tf.reduce_mean(tf.sub(F(vt),F(v_sample)))
+    cost = tf.reduce_mean(tf.subtract(F(vt),F(v_sample)))
 
     return cost

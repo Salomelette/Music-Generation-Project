@@ -15,12 +15,14 @@ def extract_poly(database):
     current_chord=[]
     ref_chord=np.zeros(range_note)
     for m in midibd:
-        resm=[]
+        deb=np.zeros(range_note)
+        deb[0]=-1
+        resm=[deb]
         for track in m.tracks:
             for msg in track:
 
                 if not msg.is_meta and (msg.type == 'note_on' or msg.type=='note_off'):
-                    print(msg)
+                    #print(msg)
                     if msg.time<=2 and msg.velocity!=0:
                         current_chord.append(msg.note)
                     else:
@@ -31,8 +33,12 @@ def extract_poly(database):
                         current_chord=[]
                     #print(current_chord)
                     #time.sleep(2)
+        end=np.zeros(range_note)
+        end[-1]=-1
+        resm.append(end)
         res.append(resm)
-    return res
+
+    return np.array(res)
 
 def write_midi_poly(list_chord,filename):#faut changer les valeurs de time et de velocity
     track=MidiTrack()
@@ -53,4 +59,5 @@ def write_midi_poly(list_chord,filename):#faut changer les valeurs de time et de
 if __name__=="__main__":
     database = os.listdir("./database")
     q=extract_poly(database)
-    write_midi_poly(q[0],"coldplay.mid")
+    print(q)
+    write_midi_poly(q[0],"beeth.mid")
