@@ -17,7 +17,8 @@ def extract_poly(database):
     for m in midibd:
         deb=np.zeros(range_note)
         deb[0]=-1
-        resm=[deb]
+        resm=[]
+        #resm=[deb]
         for track in m.tracks:
             for msg in track:
 
@@ -35,7 +36,7 @@ def extract_poly(database):
                     #time.sleep(2)
         end=np.zeros(range_note)
         end[-1]=-1
-        resm.append(end)
+        #resm.append(end)
         res.append(np.array(resm))
 
     return res
@@ -47,10 +48,12 @@ def write_midi_poly(list_chord,filename):#faut changer les valeurs de time et de
     track.append(Message('program_change', program=1))
     for ref_chord in list_chord:
         chord=np.where(ref_chord==1)[0]
+        if len(chord)==0:
+            continue
         track.append(Message('note_on',note=chord[0],velocity=70,time=120))
         for note in chord[1:]:
             track.append(Message('note_on',note=note,velocity=70,time=0))
-        track.append(Message('note_on',note=chord[0],velocity=0,time=120))
+        track.append(Message('note_on',note=chord[0],velocity=0,time=150))
         for note in chord[1:]:
             track.append(Message('note_on',note=note,velocity=0,time=0))
     outfile.save(filename)
@@ -60,4 +63,4 @@ if __name__=="__main__":
     database = os.listdir("./database")
     q=extract_poly(database)
     #print(q)
-    write_midi_poly(q[0][1:-1],"beeth.mid")
+    write_midi_poly(q[0][1:-1],"yann.mid")

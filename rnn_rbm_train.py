@@ -47,4 +47,4 @@ def make_train(datapath,nb_epochs):
     # mais je comprend pas on retourne rien ?? c'est passé ou tout ce qu'on a appris *legerement perdu*
 
 if __name__=="__main__":
-    make_train("database",100)
+    make_train("database",101)
