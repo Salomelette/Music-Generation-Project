@@ -23,19 +23,19 @@ def make_train(datapath,nb_epochs):
     ckpt = tf.train.Saver(variables)
 
     with tf.Session() as session:
-        init=tf.initializers.global_variables()
+        init = tf.initializers.global_variables()
         session.run(init)
+        # saved_weights_path ? weight_initializations ? Peut-etre a faire pour opt 
         print("start")
-        for epoch in range(nb_epochs):
-            h_cost= []
 
-            
+        for epoch in range(nb_epochs):
+            h_cost= []            
             t=time.time()
             for music in musics:
                 for i in range(0,len(music),batch_size):
                     datax =music[i:i+batch_size]
                     
-                    eps=min(0.01,0.1/(i+1))
+                    eps=min(0.01,0.1/(i+1)) # decreasing learning rate according to another program (a trouver).
                     _,C = session.run([update,cost],feed_dict={x:datax,learning_rate:eps})
 
                     h_cost.append(C)
@@ -43,6 +43,8 @@ def make_train(datapath,nb_epochs):
 
             if epoch % 5==0 and epoch!=0:
                 ckpt.save(session,"ckpt_dir/epoch_{}.ckpt".format(epoch))
+
+    # mais je comprend pas on retourne rien ?? c'est passé ou tout ce qu'on a appris *legerement perdu*
 
 if __name__=="__main__":
     make_train("database",100)

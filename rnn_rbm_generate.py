@@ -3,9 +3,6 @@ import numpy as np
 import rnn_rbm
 
 
-
-
-
 def generate_music(ckpt_datapath):
 
 
