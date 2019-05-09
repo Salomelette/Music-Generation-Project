@@ -8,7 +8,7 @@ batch_size=100
 
 def make_train(datapath,nb_epochs):
 
-    x,cost, W,bh,bv, learning_rate, Wuh,Wuv,Wvu,Wuu,bu,u0 = rnn_rbm.rnnrbm()
+    x, generate, cost, W, bh, bv, learning_rate, Wuh, Wuv, Wvu, Wuu, bu, u0 = rnn_rbm.rnnrbm()
     variables = [W, Wuh, Wuv, Wvu, Wuu, bh, bv, bu, u0]
 
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)

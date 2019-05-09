@@ -43,6 +43,41 @@ def rnnrbm():
         bh_t = tf.add(bh,tf.matmul(u_m1,Wuh))
         return bh_t
 
+    def generate_recurrence(count,k,u_tm1,primer,v_t,music): # k ?
+        bv_t = tf.add(bv, tf.matmul(u_tm1, Wuv))
+        bh_t = tf.add(bh, tf.matmul(u_tm1, Wuh))
+
+        #Run the Gibbs step to get the music output. Prime the RBM with the previous musical output.
+        v_t_upt = rbm.gibbs_sampling(primer, W, bh_t, bv_t, k=25) #25 comme dans la source mais pas obligé si trop long 
+
+        #Update the RNN hidden state based on the musical output and current hidden state.
+        u_t = tf.tanh(bu + tf.matmul(x_out, Wvu) + tf.matmul(u_tm1, Wuu))
+
+        #Add the new output to the musical piece
+        music = tf.concat([music,v_t_upt],0) #c'est bien dans ce sens la j'ai verifié 
+        return count+1, k, u_t, v_upt, v_t, music 
+
+    def generate(k,v=v,batch_size=batch_size,u0=u0,n_visible=input_size,prime_length=100):
+         """
+            This function handles generating music. This function is one of the outputs of the build_rnnrbm function
+            Args:
+                num (int): The number of timesteps to generate
+                x (tf.placeholder): The data vector. We can use feed_dict to set this to the music primer. 
+                size_bt (tf.float32): The batch size
+                u0 (tf.Variable): The initial state of the RNN
+                n_visible (int): The size of the data vectors
+                prime_length (int): The number of timesteps into the primer song that we use befoe beginning to generate music
+            Returns:
+                The generated music, as a tf.Tensor
+        """
+
+        U_first = tf.scan(rnn_step,v,initializer=u0)
+        U = U_first[np.floor(prime_length/seq_lengh), :, :] #je comprend pas ce que je fais (compréhension à partager si acquise)
+        [_,_,_,_,_,music] = tf.while_loop(lambda count, num_iter, *args: count < num_iter, 
+                                            generate_recurrence, [tf.constant(1,tf.int64), tf.constant(k), U, 
+                                            tf.zeros([1, n_visible], tf.float64), v, tf.zeros([1, n_visible], tf.float64)]) #ca non plus
+
+        return music 
 
 
 
@@ -56,6 +91,6 @@ def rnnrbm():
 
     cost = rbm.free_energy_cost(v,W,BH_t,BV_t,k=15)
 
-    return v,cost, W,bh,bv, learning_rate, Wuh,Wuv,Wvu,Wuu,bu,u0
+    return v, generate, cost, W, bh, bv, learning_rate, Wuh, Wuv, Wvu, Wuu, bu, u0
 
     
