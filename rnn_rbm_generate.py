@@ -26,6 +26,9 @@ def generate_music(num,ckpt_datapath):
     		new_music_filename = "generated_music_{}.midi".format(i)
     		extract_polyphonic.write_midi_poly(generated_music,new_music_filename)
 
+if __name__=="__main__":
+	#generate_music(1,) ckpt_datapath ? c'est quoi ca ? 
+
 
 
 
