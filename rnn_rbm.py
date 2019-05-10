@@ -68,8 +68,9 @@ def rnnrbm():
             prime_length (int): The number of timesteps into the primer song that we use befoe beginning to generate music
         Returns:
             The generated music, as a tf.Tensor"""
+        print("v=",v.data)
         U_first = tf.scan(rnn_step,v,initializer=u0)
-        print("U_first ",U_first.get_shape())
+        print("U_first=",U_first.data)
         U = U_first[int(np.floor(prime_length/seq_lengh)), :, :] #je comprend pas ce que je fais (compréhension à partager si acquise)
         [_,_,_,_,_,music] = tf.while_loop(lambda count, num_iter, *args: count < num_iter, 
                                             generate_recurrence, [tf.constant(1,tf.int32), tf.constant(k), U, 
