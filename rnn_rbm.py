@@ -69,14 +69,15 @@ def rnnrbm():
         Returns:
             The generated music, as a tf.Tensor"""
         U_first = tf.scan(rnn_step,v,initializer=u0)
-        print("allo ",np.floor(prime_length/1))
+        print("U_first ",U_first.get_shape())
         U = U_first[int(np.floor(prime_length/seq_lengh)), :, :] #je comprend pas ce que je fais (compréhension à partager si acquise)
         [_,_,_,_,_,music] = tf.while_loop(lambda count, num_iter, *args: count < num_iter, 
                                             generate_recurrence, [tf.constant(1,tf.int32), tf.constant(k), U, 
-                                            tf.zeros([1, n_visible], tf.float32), v, tf.zeros([1, n_visible], tf.float32)],shape_invariants=[tf.constant(1,tf.int32).get_shape(), tf.constant(k).get_shape(), U.get_shape(), tf.TensorShape([1, n_visible]),v.get_shape(), tf.TensorShape([None, None])]) #ca non plus
+                                            tf.zeros([1, n_visible], tf.float32), v, tf.zeros([1, n_visible], tf.float32)],
+                                            shape_invariants=[tf.constant(1,tf.int32).get_shape(), tf.constant(k).get_shape(), 
+                                            U.get_shape(), tf.TensorShape([1, n_visible]),v.get_shape(), tf.TensorShape([None, None])]) 
 
         return music 
-
 
 
     tf.assign(BH_t,tf.tile(BH_t,[batch_size,1]))
