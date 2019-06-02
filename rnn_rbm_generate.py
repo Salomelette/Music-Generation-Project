@@ -13,7 +13,7 @@ def generate_music(ckpt_datapath):
 
     saver = tf.train.Saver(variables) #ha c'est là qu'il a tout gardé ??
 
-    songs = extract_polyphonic.extract_poly(database)[0]
+    songs = extract_polyphonic.extract_poly2(database)[0]
 
     with tf.Session() as session:
         init = tf.initializers.global_variables()
@@ -21,14 +21,20 @@ def generate_music(ckpt_datapath):
 
         saver.restore(session, ckpt_datapath) #a faire ou pas ?? 
 
-        generated_music = session.run(generate(700), feed_dict={x: songs})
+        generated_music = session.run(generate(1000,prime_length=100), feed_dict={x: songs})
         print(generated_music)
         #return generated_music
-        new_music_filename = "generated_music_beeth.mid"
-        extract_polyphonic.write_midi_poly(generated_music,new_music_filename)
+    for i,item in enumerate(generated_music):
+        if item[-1]==1:
+            generated_music=generated_music[:i]
+            print(item)
+            break
+    print(len(generated_music))
+    new_music_filename = "generated_music_aok3.mid"
+    extract_polyphonic.write_midi_poly2(generated_music,new_music_filename)
 
 if __name__=="__main__":
-    q=generate_music("./ckpt_dir/epoch_100.ckpt")# ckpt_datapath ? c'est quoi ca ? 
+    q=generate_music("./ckpt_dir/epoch_bis_100.ckpt")# ckpt_datapath ? c'est quoi ca ? 
 
 
 

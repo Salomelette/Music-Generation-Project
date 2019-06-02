@@ -44,3 +44,26 @@ def free_energy_cost(vt,W,bh,bv,k):
     cost = tf.reduce_mean(tf.subtract(F(vt),F(v_sample)))
 
     return cost
+
+
+def get_cd_update(x, W, bv, bh, k, lr):
+    #This is the contrastive divergence algorithm. 
+
+    #First, we get the samples of x and h from the probability distribution
+    #The sample of x
+    x_sample = gibbs_sampling(x, W, bh, bv, k)
+    #The sample of the hidden nodes, starting from the visible state of x
+    h = sample(tf.sigmoid(tf.matmul(x, W) + bh))
+    #The sample of the hidden nodes, starting from the visible state of x_sample
+    h_sample = sample(tf.sigmoid(tf.matmul(x_sample, W) + bh))
+
+    #Next, we update the values of W, bh, and bv, based on the difference between the samples that we drew and the original values
+    lr = tf.constant(lr, tf.float32) #The CD learning rate
+    size_bt = tf.cast(tf.shape(x)[0], tf.float32) #The batch size
+    W_  = tf.multiply(lr/size_bt, tf.subtract(tf.matmul(tf.transpose(x), h), tf.matmul(tf.transpose(x_sample), h_sample)))
+    bv_ = tf.multiply(lr/size_bt, tf.reduce_sum(tf.subtract(x, x_sample), 0, True))
+    bh_ = tf.multiply(lr/size_bt, tf.reduce_sum(tf.subtract(h, h_sample), 0, True))
+
+    #When we do sess.run(updt), TensorFlow will run all 3 update steps
+    updt = [W.assign_add(W_), bv.assign_add(bv_), bh.assign_add(bh_)]
+    return updt
